@@ -1,6 +1,5 @@
-
-# Created by https://www.toptal.com/developers/gitignore/api/node,vscode
-# Edit at https://www.toptal.com/developers/gitignore?templates=node,vscode
+# DB config files
+config/db_config.json
 
 ### Node ###
 # Logs
@@ -123,5 +122,3 @@ dist
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
-
-# End of https://www.toptal.com/developers/gitignore/api/node,vscode
