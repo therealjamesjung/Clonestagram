@@ -22,10 +22,10 @@ This is the backend repository of Clonestagram: A replication of [Instagram](htt
     
 #### ❗ 매번 순서대로 진행
 
-1. __Merge__ the latest from upstream
+1. __Pull__ the latest from upstream
 
     ```bash
-    $ git merge upstream develop
+    $ git pull upstream develop
     ```
     
 2. __Commit__ changes to your own branch
