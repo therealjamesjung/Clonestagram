@@ -8,11 +8,14 @@ const _query = async (raw_query) => {
     password: config.password,
     database: config.database,
   });
-
-  let [rows, _] = await connection.execute(raw_query);
-  await connection.end();
-
-  return rows;
+  try {
+    let [rows, _] = await connection.execute(raw_query);
+    await connection.end();
+    return rows;
+  } catch (error) {
+    await connection.end();
+    return error;
+  }
 };
 
 module.exports = _query;
