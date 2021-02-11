@@ -12,22 +12,22 @@ This is the backend repository of Clonestagram: A replication of [Instagram](htt
 
 #### ✔ (최초 1회) 초기 설정
 
-1. __Fork__ the repo on GitHub
-2. __Clone__ the project to your own machine
+1. **Fork** the repo on GitHub
+2. **Clone** the project to your local environment
 3. Set james0918/Clonestagram to upstream repo
 
-    ```bash
-    $ git remote add upstream https://github.com/jamesj0918/Clonestagram
-    ```
-    
+   ```bash
+   $ git remote add upstream https://github.com/jamesj0918/Clonestagram
+   ```
+
 #### ❗ 매번 순서대로 진행
 
-1. __Pull__ the latest from upstream
+1. **Pull** the latest from upstream
 
-    ```bash
-    $ git pull upstream develop
-    ```
-    
-2. __Commit__ changes to your own branch
-3. __Push__ your work back up to your fork
-4. Submit a __Pull request__ so that we can review your change
+   ```bash
+   $ git pull upstream develop
+   ```
+
+2. **Commit** changes to your own branch
+3. **Push** your work back up to your forked repo
+4. Submit a **Pull request** so that we can review your changes
