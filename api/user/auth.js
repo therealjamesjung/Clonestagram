@@ -3,7 +3,6 @@ const config = require("../../config/config.json");
 
 const _auth = (req, res, next) => {
   try {
-    console.log(req.headers.authorization);
     req.decoded = jwt.verify(req.headers.authorization, config.SECRET_KEY);
     return next();
   } catch (error) {
