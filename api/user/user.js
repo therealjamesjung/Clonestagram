@@ -24,15 +24,14 @@ router.post("/signin", async (req, res) => {
   query_response.data = await _query(
     `SELECT user_id, email, name FROM User WHERE user_id='${user_id}' AND password='${password}'`
   );
-
   if (query_response.data.length == 0) {
     query_response.message = "User with given info does not exists";
   } else {
     query_response.token = jwt.sign(
       {
-        user_id: query_response.data.user_id,
-        email: query_response.data.email,
-        name: query_response.data.name,
+        user_id: query_response.data[0].user_id,
+        email: query_response.data[0].email,
+        name: query_response.data[0].name,
       },
       config.SECRET_KEY,
       {

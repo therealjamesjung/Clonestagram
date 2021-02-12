@@ -11,7 +11,7 @@ const _query = async (raw_query) => {
   try {
     let [rows, _] = await connection.execute(raw_query);
     await connection.end();
-    return rows[0];
+    return rows;
   } catch (error) {
     await connection.end();
     return error;
