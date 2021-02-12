@@ -31,7 +31,8 @@ router.post("/signin", async (req, res) => {
     query_response.token = jwt.sign(
       {
         user_id: query_response.data.user_id,
-        password: query_response.data.password,
+        email: query_response.data.email,
+        name: query_response.data.name,
       },
       config.SECRET_KEY,
       {
