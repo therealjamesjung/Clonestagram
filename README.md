@@ -31,3 +31,11 @@ This is the backend repository of Clonestagram: A replication of [Instagram](htt
 2. **Commit** changes to your own branch
 3. **Push** your work back up to your forked repo
 4. Submit a **Pull request** so that we can review your changes
+
+## Dependencies
+
+    - Node.js
+    - express
+    - mysql2
+    - crypto
+    - jsonwebtoken
