@@ -14,7 +14,7 @@ const _query = async (raw_query) => {
     return rows;
   } catch (error) {
     await connection.end();
-    return error;
+    throw error;
   }
 };
 
