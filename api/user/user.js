@@ -25,6 +25,7 @@ router.post("/signin", async (req, res) => {
     `SELECT user_id, email, name FROM User WHERE user_id='${user_id}' AND password='${password}'`
   );
   if (query_response.data.length == 0) {
+    query_response.status = "400 Bad Request";
     query_response.message = "User with given info does not exists";
   } else {
     query_response.token = jwt.sign(
@@ -83,7 +84,7 @@ router.post("/signup", async (req, res) => {
       query_response.message = `User: ${user_id} is created.`;
     } catch (error) {
       query_response.status = "400 Bad Request";
-      query_response.message = error;
+      query_response.message = error.message;
     }
   }
 
