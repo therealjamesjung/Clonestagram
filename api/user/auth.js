@@ -4,7 +4,11 @@ const config = require("../../config/config.json");
 const _auth = (req, res, next) => {
   try {
     req.decoded = jwt.verify(req.headers.authorization, config.SECRET_KEY);
-    return next();
+
+    if(req.decoded){
+      res.locals.user_id = req.decoded.user_id;
+      return next();
+    }
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(419).json({
