@@ -39,3 +39,4 @@ This is the backend repository of Clonestagram: A replication of [Instagram](htt
     - mysql2
     - crypto
     - jsonwebtoken
+    - cors
