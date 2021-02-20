@@ -124,7 +124,6 @@ router.post('/comments/:comment_id/like', _auth, async(req,res) => {
                 `UPDATE Comment SET likes = likes + 1 where id = ${comment_id};`
             );
             query_response.message = `You like a comment #${comment_id}.`;
-            query_response.is_liked = true;
         }
         else{
             await _query(utils._delete("Comment_User", is_liked[0].id));
@@ -146,9 +145,8 @@ router.get('/comments/:comment_id/like', _auth, async(req,res) => {
 
     try{
         query_response.data = await _query(
-            `SELECT * FROM User WHERE user_id = '(SELECT user_id FROM Comment_User WHERE comment_id = ${req.params.comment_id})';`
+            `SELECT user_id,name FROM User WHERE user_id in (SELECT user_id FROM Comment_User WHERE comment_id = ${req.params.comment_id});`
         );
-        console.log(query_response.data);
     }
     catch(error){
         query_response.status = "400 Bad Request.";
