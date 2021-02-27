@@ -13,12 +13,25 @@ router.use((req, res, next) => {
 router.get('/comments/:post_id', _auth, async(req,res) => {
     let query_response = { status : "200 OK" };
 
+    const user = res.locals.user_id;
     const post_id = req.params.post_id;
     const page = req.query.page - 1;
     const limit = 10;
+    let result;
 
     try{
         query_response.data = await _query(`SELECT * FROM Comment WHERE post = ${post_id} ORDER BY created_at LIMIT ${page*limit}, ${limit};`);
+        for(let i=0;i<query_response.data.length;i++) {
+            result = await _query(
+                `SELECT * From Comment_User WHERE comment_id = ${query_response.data[i].id} AND user_id = '${user}';`
+            )
+            if(result.length == 0) {
+                query_response.data[i].is_liked = false;
+            }
+            else {
+                query_response.data[i].is_liked = true;
+            }
+        }
         if(query_response.data.length == 0){
             query_response.status = "400 Bad Request.";
             query_response.message = "No more comments";
@@ -123,14 +136,14 @@ router.post('/comments/:comment_id/like', _auth, async(req,res) => {
             await _query(
                 `UPDATE Comment SET likes = likes + 1 where id = ${comment_id};`
             );
-            query_response.message = `You like a comment #${comment_id}.`;
+            query_response.message = `'${user}' like a comment #${comment_id}.`;
         }
         else{
             await _query(utils._delete("Comment_User", is_liked[0].id));
             await _query(
                 `UPDATE Comment SET likes = likes - 1 where id = ${comment_id};`
             );
-            query_response.message = `You cancel to like a comment #${comment_id}.`;
+            query_response.message = `'${user}' cancel to like a comment #${comment_id}.`;
         }
     }
     catch(error){
@@ -143,10 +156,25 @@ router.post('/comments/:comment_id/like', _auth, async(req,res) => {
 router.get('/comments/:comment_id/like', _auth, async(req,res) => {
     let query_response = { status : "200 OK" };
 
+    const user = res.locals.user_id;
+    const comment_id = req.params.comment_id;
+    let result;
+    
     try{
         query_response.data = await _query(
-            `SELECT user_id,name FROM User WHERE user_id in (SELECT user_id FROM Comment_User WHERE comment_id = ${req.params.comment_id});`
+            `SELECT user_id,name FROM User WHERE user_id in (SELECT user_id FROM Comment_User WHERE comment_id = ${comment_id});`
         );
+        for(let i=0;i<query_response.data.length;i++) {
+            result = await _query(
+                `SELECT * FROM User_User WHERE target_user = '${query_response.data[i].user_id}' AND request_user = '${user}';`
+            )
+            if(result.length == 0) {
+                query_response.data[i].is_followed = false;
+            }
+            else {
+                query_response.data[i].is_followed = true;
+            }
+        }
     }
     catch(error){
         query_response.status = "400 Bad Request.";
