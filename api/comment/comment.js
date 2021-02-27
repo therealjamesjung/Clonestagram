@@ -17,25 +17,27 @@ router.get('/comments/:post_id', _auth, async(req,res) => {
     const post_id = req.params.post_id;
     const page = req.query.page - 1;
     const limit = 10;
+    let comments;
     let result;
 
     try{
-        query_response.data = await _query(`SELECT * FROM Comment WHERE post = ${post_id} ORDER BY created_at LIMIT ${page*limit}, ${limit};`);
-        for(let i=0;i<query_response.data.length;i++) {
+        comments = await _query(`SELECT * FROM Comment WHERE post = ${post_id} ORDER BY likes desc LIMIT ${page*limit}, ${limit};`);
+        for(let i=0;i<comments.length;i++) {
             result = await _query(
-                `SELECT * From Comment_User WHERE comment_id = ${query_response.data[i].id} AND user_id = '${user}';`
+                `SELECT * From Comment_User WHERE comment_id = ${comments[i].id} AND user_id = '${user}';`
             )
             if(result.length == 0) {
-                query_response.data[i].is_liked = false;
+                comments[i].is_liked = false;
             }
             else {
-                query_response.data[i].is_liked = true;
+                comments[i].is_liked = true;
             }
         }
-        if(query_response.data.length == 0){
+        if(comments.length == 0){
             query_response.status = "400 Bad Request.";
             query_response.message = "No more comments";
         }
+        query_response.data = utils._convertToTree(comments, 'id', 'parent_comment', 'child_comments');
     }
     catch(error){
         query_response.status = "400 Bad Request.";
