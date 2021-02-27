@@ -6,7 +6,6 @@ const router = express.Router();
 const _query = require("../../database/db");
 const _auth = require("./auth");
 const utils = require("../../utils/utils");
-const config = require("../../config/config.json");
 
 router.use((req, res, next) => {
   console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
@@ -34,7 +33,7 @@ router.post("/signin", async (req, res) => {
         email: query_response.data[0].email,
         name: query_response.data[0].name,
       },
-      config.SECRET_KEY,
+      process.env.SECRET_KEY,
       {
         expiresIn: "12h",
       },

@@ -1,11 +1,10 @@
 const jwt = require("jsonwebtoken");
-const config = require("../../config/config.json");
 
 const _auth = (req, res, next) => {
   try {
-    req.decoded = jwt.verify(req.headers.authorization, config.SECRET_KEY);
+    req.decoded = jwt.verify(req.headers.authorization, process.env.SECRET_KEY);
 
-    if(req.decoded){
+    if (req.decoded) {
       res.locals.user_id = req.decoded.user_id;
       return next();
     }
