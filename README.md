@@ -40,3 +40,13 @@ This is the backend repository of Clonestagram: A replication of [Instagram](htt
     - crypto
     - jsonwebtoken
     - cors
+
+## Required Enviroment Variables
+
+    - DB_HOST : Host for DB Connection
+    - DB_USER : Username for DB
+    - DB_PASSWORD : Password for DB
+    - DB_DATABASE : Name of Database
+    - SECRET_KEY : Secret key used for JWT
+    - API_PORT : API Port (3000 for default)
+    - API_HOST : API Host (localhost for default)
