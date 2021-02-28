@@ -12,6 +12,7 @@ router.use((req, res, next) => {
   next();
 });
 
+// Sign in API
 router.post("/signin", async (req, res) => {
   const user_id = req.body.user_id;
   const password = crypto
@@ -47,6 +48,7 @@ router.post("/signin", async (req, res) => {
   res.send(query_response);
 });
 
+// Sign up API
 router.post("/signup", async (req, res) => {
   let query_response = {};
 
@@ -105,6 +107,7 @@ router.get("/users", _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Follow request API
 router.post("/users/:user_id/follow", _auth, async (req, res) => {
   let query_response = {};
 
