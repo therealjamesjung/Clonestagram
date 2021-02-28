@@ -105,6 +105,38 @@ router.get("/users", _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.post("/users/:user_id/follow", _auth, async (req, res) => {});
+router.post("/users/:user_id/follow", _auth, async (req, res) => {
+  let query_response = {};
+
+  try {
+    let query = await _query(
+      `SELECT user_id, name, is_private FROM User WHERE user_id='${req.params.user_id}'`
+    );
+    let target_user = query[0];
+
+    try {
+      let data = await _query(
+        `SELECT * FROM User_User WHERE target_user='${target_user.user_id}' AND request_user='${res.locals.user_id}'`
+      );
+      if (data.length === 0) {
+        await _query(
+          `INSERT INTO User_User (target_user, request_user) VALUES ('${target_user.user_id}', '${res.locals.user_id}')`
+        );
+      } else if (data[0].accepted === 0) {
+        query_response.message = `You have already requested to follow ${target_user.user_id}`;
+      } else {
+        query_response.message = `You are already following ${target_user.user_id}`;
+      }
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
 
 module.exports = router;
