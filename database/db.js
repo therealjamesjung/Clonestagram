@@ -1,12 +1,11 @@
 const mysql = require("mysql2/promise");
-const config = require("../config/config.json");
 
 const _query = async (raw_query) => {
   const connection = await mysql.createConnection({
-    host: config.host,
-    user: config.user,
-    password: config.password,
-    database: config.database,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
   });
   try {
     let [rows, _] = await connection.execute(raw_query);
