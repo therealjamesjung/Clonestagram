@@ -108,37 +108,81 @@ router.get("/users", _auth, async (req, res) => {
 });
 
 // Follow request API
-router.post("/users/:user_id/follow", _auth, async (req, res) => {
+router.put("/users/:user_id/follow", _auth, async (req, res) => {
   let query_response = {};
 
   try {
     let query = await _query(
       `SELECT user_id, name, is_private FROM User WHERE user_id='${req.params.user_id}'`
     );
-    let target_user = query[0];
-
-    try {
-      let data = await _query(
-        `SELECT * FROM User_User WHERE target_user='${target_user.user_id}' AND request_user='${res.locals.user_id}'`
-      );
-      if (data.length === 0) {
-        await _query(
-          `INSERT INTO User_User (target_user, request_user) VALUES ('${target_user.user_id}', '${res.locals.user_id}')`
-        );
-      } else if (data[0].accepted === 0) {
-        query_response.message = `You have already requested to follow ${target_user.user_id}`;
-      } else {
-        query_response.message = `You are already following ${target_user.user_id}`;
-      }
-    } catch (error) {
+    if (query.length === 0) {
       res.status(400);
-      query_response.message = error;
+      query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+    } else {
+      let target_user = query[0];
+      try {
+        let data = await _query(
+          `SELECT * FROM User_User WHERE target_user='${target_user.user_id}' AND request_user='${res.locals.user_id}'`
+        );
+        if (data.length === 0) {
+          await _query(
+            `INSERT INTO User_User (target_user, request_user) VALUES ('${target_user.user_id}', '${res.locals.user_id}')`
+          );
+        } else if (data[0].accepted === 0) {
+          query_response.message = `You have already requested to follow ${target_user.user_id}`;
+        } else {
+          query_response.message = `You are already following ${target_user.user_id}`;
+        }
+      } catch (error) {
+        res.status(400);
+        query_response.message = error;
+      }
     }
   } catch (error) {
     res.status(400);
     query_response.message = error;
   }
 
+  res.send(query_response);
+});
+
+// Accept follow request API
+router.put("/users/:user_id/accept", _auth, async (req, res) => {
+  let query_response = {};
+
+  let query = await _query(
+    `SELECT user_id, name, is_private FROM User WHERE user_id='${req.params.user_id}'`
+  );
+  if (query.length === 0) {
+    res.status(400);
+    query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+  } else {
+    try {
+      let follow_req = await _query(
+        `SELECT * FROM User_User WHERE target_user='${res.locals.user_id}' AND request_user='${req.params.user_id}'`
+      );
+      if (follow_req.length === 0) {
+        res.status(400);
+        query_response.message = `You have no follow request from ${req.params.user_id}`;
+      } else if (follow_req[0].accepted === 1) {
+        res.status(400);
+        query_response.message = `You have already accepted the follow request from ${req.params.user_id}`;
+      } else {
+        try {
+          await _query(
+            `UPDATE User_User SET accepted=1 WHERE id=${follow_req[0].id}`
+          );
+          query_response.message = `You have accepted the follow request of user_id ${req.params.user_id}`;
+        } catch (error) {
+          res.status(400);
+          query_response.message = error;
+        }
+      }
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
+  }
   res.send(query_response);
 });
 
