@@ -207,7 +207,7 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
-    query_response.message = "You can accpept yourself";
+    query_response.message = "You can accept yourself";
     return res.send(query_response);
   }
 
