@@ -18,13 +18,14 @@ router.post("/signin", async (req, res) => {
     .createHash("sha512")
     .update(req.body.password)
     .digest("base64");
-  let query_response = { status: "200 OK" };
+
+  let query_response = {};
 
   query_response.data = await _query(
     `SELECT user_id, email, name FROM User WHERE user_id='${user_id}' AND password='${password}'`
   );
   if (query_response.data.length == 0) {
-    query_response.status = "400 Bad Request";
+    res.status(400);
     query_response.message = "User with given info does not exists";
   } else {
     query_response.token = jwt.sign(
@@ -47,7 +48,7 @@ router.post("/signin", async (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  let query_response = { status: "200 OK" };
+  let query_response = {};
 
   const user_id = req.body.user_id;
   const email = req.body.email;
@@ -65,10 +66,10 @@ router.post("/signup", async (req, res) => {
   ]);
 
   if (missing_fields.length != 0) {
-    query_response.status = "400 Bad Request";
+    res.status(400);
     query_response.message = `Fields ${missing_fields.toString()} is required.`;
   } else if (utils._validate_email(email) === false) {
-    query_response.status = "400 Bad Request";
+    res.status(400);
     query_response.message = "Email is not valid.";
   } else {
     try {
@@ -82,7 +83,7 @@ router.post("/signup", async (req, res) => {
       };
       query_response.message = `User: ${user_id} is created.`;
     } catch (error) {
-      query_response.status = "400 Bad Request";
+      res.status(400);
       query_response.message = error.message;
     }
   }
@@ -90,17 +91,20 @@ router.post("/signup", async (req, res) => {
   res.send(query_response);
 });
 
+// Should be gone before production
 router.get("/users", _auth, async (req, res) => {
-  let query_response = { status: "200 OK" };
+  let query_response = {};
 
   try {
     query_response.data = await _query("SELECT * FROM User;");
   } catch (error) {
-    query_response.status = "400 Bad Request";
+    res.status(400);
     query_response.message = error;
   }
 
   res.send(query_response);
 });
+
+router.post("/users/:user_id/follow", _auth, async (req, res) => {});
 
 module.exports = router;
