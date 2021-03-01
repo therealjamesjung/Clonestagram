@@ -28,12 +28,13 @@ router.get('/posts', _auth, async (req, res) => {
 
 router.post('/posts', _auth, async (req, res) => {
   let query_response = { status: '200 OK' };
-  const writer = req.body.writer;
+
+  const writer = res.locals.user_id;
   const content = req.body.content;
 
   try {
     await _query(
-      `INSERT INTO post (content, writer) VALUES ('${content}, '${writer}');`
+      `INSERT INTO post (content, writer) VALUES ('${content}', '${writer}');`
     );
     query_response.data = req.body;
   } catch (error) {
