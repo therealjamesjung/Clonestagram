@@ -10,12 +10,14 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get('/posts/:user_id', _auth, async (req, res) => {
+router.get('/posts', _auth, async (req, res) => {
   let query_response = { status: '200 OK' };
-  const user_id = req.params.id;
+  const user_id = req.body.user_id;
 
   try {
-    query_response.data = await _query(utils._select('post', user_id));
+    query_response.data = await _query(
+      `SELECT * FROM post WHERE writer='${user_id}'`
+    );
   } catch (error) {
     query_response.status = '400 Bad Request';
     query_response.message = error;
