@@ -59,19 +59,28 @@ router.post('/posts', _auth, async (req, res) => {
 
 router.put('/posts/:post_id', _auth, async (req, res) => {
   let query_response = { status: '200 OK' };
-  const post_id = req.params.id;
+
+  const user_id = res.locals.user_id;
+  const post_id = req.params.post_id;
   const content = req.body.content;
+  const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
   try {
-    let query = await _query(utils._select('post', post_id));
+    if (user_id === writer[0].writer) {
+      let query = await _query(utils._select('post', post_id));
 
-    if (query.length == 0) {
-      query_response.status = '204 No Content';
-      query_response.message = `Post with id=${post_id} does not exists.`;
+      if (query.length == 0) {
+        query_response.status = '204 No Content';
+        query_response.message = `Post with id ${post_id} does not exists.`;
+      } else {
+        await _query(
+          `UPDATE post SET content='${content}' WHERE id=${post_id}`
+        );
+        query_response.message = `Post with id ${post_id} has been successfully updated.`;
+        query_response.data = req.body;
+      }
     } else {
-      await _query(utils._update('post', post_id, content));
-      query_response.message = `Post id ${post_id} has been successfully updated.`;
-      query_response.data = req.body;
+      query_response.message = `Post with id ${post_id} is not your post.`;
     }
   } catch (error) {
     query_response.status = '400 Bad Request';
