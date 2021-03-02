@@ -12,12 +12,24 @@ router.use((req, res, next) => {
 
 router.get('/posts', _auth, async (req, res) => {
   let query_response = { status: '200 OK' };
-  const user_id = req.body.user_id;
+
+  const request_user = res.locals.user_id;
+  const target_user = req.body.target_user;
+  const is_private = await _query(
+    `SELECT is_private FROM user WHERE user_id='${target_user}'`
+  );
+  const accepted = await _query(
+    `SELECT accepted FROM user_user WHERE target_user='${target_user}' AND request_user='${request_user}'`
+  );
 
   try {
-    query_response.data = await _query(
-      `SELECT * FROM post WHERE writer='${user_id}'`
-    );
+    if (is_private[0].is_private && !accepted[0].accepted) {
+      query_response.message = `This account is private.`;
+    } else {
+      query_response.data = await _query(
+        `SELECT * FROM post WHERE writer='${target_user}'`
+      );
+    }
   } catch (error) {
     query_response.status = '400 Bad Request';
     query_response.message = error;
