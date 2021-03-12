@@ -16,10 +16,10 @@ router.get('/posts', _auth, async (req, res) => {
   const request_user = res.locals.user_id;
   const target_user = req.body.target_user;
   const is_private = await _query(
-    `SELECT is_private FROM user WHERE user_id='${target_user}'`
+    `SELECT is_private FROM User WHERE user_id='${target_user}'`
   );
   const accepted = await _query(
-    `SELECT accepted FROM user_user WHERE target_user='${target_user}' AND request_user='${request_user}'`
+    `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
   );
 
   try {
