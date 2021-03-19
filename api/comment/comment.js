@@ -17,6 +17,12 @@ router.get("/comments/:post_id", _auth, async (req, res) => {
   const post_id = req.params.post_id;
   const page = req.query.page - 1;
   const limit = 10;
+  const post = await _query(`SELECT * FROM Post WHERE id = ${post_id};`);
+
+  if (post.length == 0) {
+    query_response.message = `Post #${post_id} does not exist.`;
+    return res.send(query_response);
+  }
 
   try {
     let comments = await _query(
@@ -56,12 +62,18 @@ router.post("/comments/:post_id", _auth, async (req, res) => {
 
   const content = req.body.content;
   const writer = res.locals.user_id;
-  const post = req.params.post_id;
+  const post_id = req.params.post_id;
+  const post = await _query(`SELECT * FROM Post WHERE id = ${post_id};`);
+
+  if (post.length == 0) {
+    query_response.message = `Post #${post_id} does not exist.`;
+    return res.send(query_response);
+  }
 
   try {
     await _query(
       `INSERT INTO Comment (content, writer, post)
-            VALUES ('${content}','${writer}',${post});`
+            VALUES ('${content}','${writer}',${post_id});`
     );
     const comment = await _query(
       `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
@@ -83,6 +95,11 @@ router.post("/comments/:comment_id/reply", _auth, async (req, res) => {
     `SELECT post, parent_comment FROM Comment WHERE id = ${req.params.comment_id};`
   );
   const parent_comment = req.params.comment_id;
+
+  if (data.length == 0) {
+    query_response.message = `Comment #${req.params.comment_id} does not exist.`;
+    return res.send(query_response);
+  }
 
   try {
     if (data[0].parent_comment == null) {
@@ -118,6 +135,14 @@ router.delete("/comments/:comment_id", _auth, async (req, res) => {
   const comment_writer = await _query(
     `SELECT writer FROM Comment WHERE id = ${comment_id};`
   );
+  const comment = await _query(
+    `SELECT * FROM Comment WHERE id = ${comment_id};`
+  );
+
+  if (comment.length == 0) {
+    query_response.message = `Comment #${req.params.comment_id} does not exist.`;
+    return res.send(query_response);
+  }
 
   try {
     if (writer == post_writer[0].writer) {
@@ -145,6 +170,14 @@ router.post("/comments/:comment_id/like", _auth, async (req, res) => {
   const is_liked = await _query(
     `SELECT * FROM Comment_User WHERE comment_id = ${comment_id} AND user_id = '${user}';`
   );
+  const comment = await _query(
+    `SELECT * FROM Comment WHERE id = ${comment_id};`
+  );
+
+  if (comment.length == 0) {
+    query_response.message = `Comment #${req.params.comment_id} does not exist.`;
+    return res.send(query_response);
+  }
 
   try {
     if (is_liked.length == 0) {
@@ -175,6 +208,14 @@ router.get("/comments/:comment_id/like", _auth, async (req, res) => {
 
   const user = res.locals.user_id;
   const comment_id = req.params.comment_id;
+  const comment = await _query(
+    `SELECT * FROM Comment WHERE id = ${comment_id};`
+  );
+
+  if (comment.length == 0) {
+    query_response.message = `Comment #${req.params.comment_id} does not exist.`;
+    return res.send(query_response);
+  }
 
   try {
     query_response.data = await _query(
