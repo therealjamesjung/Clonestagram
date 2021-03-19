@@ -61,9 +61,12 @@ router.post("/comments/:post_id", _auth, async (req, res) => {
   try {
     await _query(
       `INSERT INTO Comment (content, writer, post)
-            VALUES ('${content}','${writer}',${post})`
+            VALUES ('${content}','${writer}',${post});`
     );
-    query_response.data = req.body;
+    const comment = await _query(
+      `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
+    );
+    query_response.data = comment;
   } catch (error) {
     res.status(400);
     query_response.data = error;
@@ -93,7 +96,10 @@ router.post("/comments/:comment_id/reply", _auth, async (req, res) => {
                 VALUES ('${content}', '${writer}', ${data[0].post}, ${data[0].parent_comment});`
       );
     }
-    query_response.data = req.body;
+    const comment = await _query(
+      `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
+    );
+    query_response.data = comment;
   } catch (error) {
     res.status(400);
     query_response.data = error;
