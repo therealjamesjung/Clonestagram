@@ -40,6 +40,7 @@ This is the backend repository of Clonestagram: A replication of [Instagram](htt
     - crypto
     - jsonwebtoken
     - cors
+    - multer
 
 ## Required Enviroment Variables
 
