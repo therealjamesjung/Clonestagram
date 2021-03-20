@@ -165,14 +165,12 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
   const post_id = req.params.post_id;
   const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  try {
-    if (user_id === writer[0].writer) {
-      let query = await _query(utils._select('Post', post_id));
-
-      if (query.length == 0) {
-        query_response.status = '204 No Content';
-        query_response.message = `Post with id ${post_id} does not exists.`;
-      } else {
+  if (writer.length === 0) {
+    res.status(400);
+    query_response.message = `Post with id ${post_id} does not exists.`;
+  } else {
+    try {
+      if (user_id === writer[0].writer) {
         const prev = await _query(
           `SELECT archived FROM Post WHERE id=${post_id}`
         );
@@ -182,13 +180,13 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
           } WHERE id=${post_id}`
         );
         query_response.message = `Archived of post with id ${post_id} has been successfully updated.`;
+      } else {
+        query_response.message = `Post with id ${post_id} is not your post.`;
       }
-    } else {
-      query_response.message = `Post with id ${post_id} is not your post.`;
+    } catch (error) {
+      query_response.status = '400 Bad Request';
+      query_response.message = error;
     }
-  } catch (error) {
-    query_response.status = '400 Bad Request';
-    query_response.message = error;
   }
 
   res.send(query_response);
