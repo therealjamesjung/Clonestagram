@@ -11,7 +11,7 @@ router.use((req, res, next) => {
 });
 
 router.get('/posts/:user_id', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+  let query_response = {};
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
@@ -48,7 +48,7 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
 });
 
 router.post('/posts', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+  let query_response = {};
 
   const writer = res.locals.user_id;
   const content = req.body.content;
@@ -67,7 +67,7 @@ router.post('/posts', _auth, async (req, res) => {
 });
 
 router.put('/posts/:post_id', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+  let query_response = {};
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -98,7 +98,7 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
 });
 
 router.delete('/posts/:post_id', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+  let query_response = {};
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -125,7 +125,7 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
 });
 
 router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+  let query_response = {};
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -159,7 +159,7 @@ router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
 });
 
 router.put('/posts/:post_id/archive', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+  let query_response = {};
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
