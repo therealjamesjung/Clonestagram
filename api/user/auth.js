@@ -153,4 +153,25 @@ router.put("/users/password", _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Reset bio API
+router.put("/users/bio", _auth, async (req, res) => {
+  let query_response = {};
+  const request_user = res.locals.user_id;
+
+  try {
+    await _query(
+      `UPDATE User set bio='${req.body.bio}' WHERE user_id='${request_user}'`
+    );
+    query_response.data = await _query(
+      `SELECT user_id, email, name, bio, is_private FROM User WHERE user_id='${request_user}'`
+    );
+    query_response.message = `You have sucessfully reset your bio`;
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
 module.exports = router;
