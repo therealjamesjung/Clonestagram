@@ -207,7 +207,7 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
-    query_response.message = "You can accept yourself";
+    query_response.message = "You can't accept yourself";
     return res.send(query_response);
   }
 
@@ -243,6 +243,28 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
       query_response.message = error;
     }
   }
+  res.send(query_response);
+});
+
+router.put("/users/private", _auth, async (req, res) => {
+  let query_response = { message: "Account privacy has been updated." };
+  const request_user = res.locals.user_id;
+
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${request_user}'`
+  );
+
+  try {
+    await _query(
+      `UPDATE User set is_private=${Math.abs(
+        is_private[0].is_private - 1
+      )} WHERE user_id='${request_user}'`
+    );
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
   res.send(query_response);
 });
 
