@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const _query = require("../../database/db");
-const _auth = require("../user/auth");
+const _auth = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
 router.use((req, res, next) => {

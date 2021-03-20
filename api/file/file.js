@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 
 const _query = require("../../database/db");
-const _auth = require("../user/auth");
+const _auth = require("../../utils/middleware");
 
 let storage = multer.diskStorage({
   destination: (req, file, cb) => {

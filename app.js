@@ -7,6 +7,7 @@ const API_PORT = process.env.API_PORT || 3000;
 const API_HOST = process.env.API_HOST || "localhost";
 const API_ROOT = "/api/v1/";
 
+const auth = require("./api/user/auth");
 const user = require("./api/user/user");
 const post = require("./api/post/post");
 const comment = require("./api/comment/comment");
@@ -17,6 +18,7 @@ app.use(cors());
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({ extended: true }));
 
+app.use(API_ROOT, auth);
 app.use(API_ROOT, user);
 app.use(API_ROOT, post);
 app.use(API_ROOT, comment);
