@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const router = express.Router();
 
 const _query = require("../../database/db");
-const _auth = require("./auth");
+const _auth = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
 router.use((req, res, next) => {

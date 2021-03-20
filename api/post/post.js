@@ -1,17 +1,17 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const _query = require('../../database/db');
-const _auth = require('../user/auth');
-const utils = require('../../utils/utils');
+const _query = require("../../database/db");
+const _auth = require("../../utils/middleware");
+const utils = require("../../utils/utils");
 
 router.use((req, res, next) => {
   console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
   next();
 });
 
-router.get('/posts/:user_id', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+router.get("/posts/:user_id", _auth, async (req, res) => {
+  let query_response = { status: "200 OK" };
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
@@ -39,8 +39,8 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.post('/posts', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+router.post("/posts", _auth, async (req, res) => {
+  let query_response = { status: "200 OK" };
 
   const writer = res.locals.user_id;
   const content = req.body.content;
@@ -51,15 +51,15 @@ router.post('/posts', _auth, async (req, res) => {
     );
     query_response.data = req.body;
   } catch (error) {
-    query_response.status = '400 Bad Request';
+    query_response.status = "400 Bad Request";
     query_response.message = error;
   }
 
   res.send(query_response);
 });
 
-router.put('/posts/:post_id', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+router.put("/posts/:post_id", _auth, async (req, res) => {
+  let query_response = { status: "200 OK" };
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -68,10 +68,10 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
 
   try {
     if (user_id === writer[0].writer) {
-      let query = await _query(utils._select('Post', post_id));
+      let query = await _query(utils._select("Post", post_id));
 
       if (query.length == 0) {
-        query_response.status = '204 No Content';
+        query_response.status = "204 No Content";
         query_response.message = `Post with id ${post_id} does not exists.`;
       } else {
         await _query(
@@ -84,15 +84,15 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
       query_response.message = `Post with id ${post_id} is not your post.`;
     }
   } catch (error) {
-    query_response.status = '400 Bad Request';
+    query_response.status = "400 Bad Request";
     query_response.message = error;
   }
 
   res.send(query_response);
 });
 
-router.delete('/posts/:post_id', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+router.delete("/posts/:post_id", _auth, async (req, res) => {
+  let query_response = { status: "200 OK" };
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -100,28 +100,28 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
 
   try {
     if (user_id === writer[0].writer) {
-      let query = await _query(utils._select('Post', post_id));
+      let query = await _query(utils._select("Post", post_id));
 
       if (query.length == 0) {
-        query_response.status = '204 No Content';
+        query_response.status = "204 No Content";
         query_response.message = `Post with id ${post_id} does not exists.`;
       } else {
-        await _query(utils._delete('Post', post_id));
+        await _query(utils._delete("Post", post_id));
         query_response.message = `Post id ${post_id} has been successfully deleted.`;
       }
     } else {
       query_response.message = `Post with id ${post_id} is not your post.`;
     }
   } catch (error) {
-    query_response.status = '400 Bad Request';
+    query_response.status = "400 Bad Request";
     query_response.message = error;
   }
 
   res.send(query_response);
 });
 
-router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+router.put("/posts/:post_id/disable_cmt", _auth, async (req, res) => {
+  let query_response = { status: "200 OK" };
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -129,10 +129,10 @@ router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
 
   try {
     if (user_id === writer[0].writer) {
-      let query = await _query(utils._select('Post', post_id));
+      let query = await _query(utils._select("Post", post_id));
 
       if (query.length == 0) {
-        query_response.status = '204 No Content';
+        query_response.status = "204 No Content";
         query_response.message = `Post with id ${post_id} does not exists.`;
       } else {
         const prev = await _query(
@@ -149,15 +149,15 @@ router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
       query_response.message = `Post with id ${post_id} is not your post.`;
     }
   } catch (error) {
-    query_response.status = '400 Bad Request';
+    query_response.status = "400 Bad Request";
     query_response.message = error;
   }
 
   res.send(query_response);
 });
 
-router.put('/posts/:post_id/archive', _auth, async (req, res) => {
-  let query_response = { status: '200 OK' };
+router.put("/posts/:post_id/archive", _auth, async (req, res) => {
+  let query_response = { status: "200 OK" };
 
   const user_id = res.locals.user_id;
   const post_id = req.params.post_id;
@@ -165,10 +165,10 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
 
   try {
     if (user_id === writer[0].writer) {
-      let query = await _query(utils._select('Post', post_id));
+      let query = await _query(utils._select("Post", post_id));
 
       if (query.length == 0) {
-        query_response.status = '204 No Content';
+        query_response.status = "204 No Content";
         query_response.message = `Post with id ${post_id} does not exists.`;
       } else {
         const prev = await _query(
@@ -185,7 +185,7 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
       query_response.message = `Post with id ${post_id} is not your post.`;
     }
   } catch (error) {
-    query_response.status = '400 Bad Request';
+    query_response.status = "400 Bad Request";
     query_response.message = error;
   }
 
