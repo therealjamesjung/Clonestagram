@@ -246,6 +246,7 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Update account privacy API
 router.put("/users/private", _auth, async (req, res) => {
   let query_response = { message: "Account privacy has been updated." };
   const request_user = res.locals.user_id;
@@ -260,6 +261,86 @@ router.put("/users/private", _auth, async (req, res) => {
         is_private[0].is_private - 1
       )} WHERE user_id='${request_user}'`
     );
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Get list of user's followers API
+router.get("/users/:user_id/followers", _auth, async (req, res) => {
+  let query_response = {};
+
+  const request_user = res.locals.user_id;
+  const target_user = req.params.user_id;
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${target_user}'`
+  );
+
+  if (is_private.length === 0) {
+    res.status(400);
+    query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+    return res.send(query_response);
+  }
+
+  const accepted = await _query(
+    `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
+  );
+
+  try {
+    if (is_private[0].is_private && accepted.length == 0) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else if (is_private[0].is_private && !accepted[0].accepted) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else {
+      query_response.data = await _query(
+        `SELECT request_user as user_id FROM User_User WHERE target_user='${target_user}' AND accepted=1`
+      );
+    }
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Get list of user's followees API
+router.get("/users/:user_id/followees", _auth, async (req, res) => {
+  let query_response = {};
+
+  const request_user = res.locals.user_id;
+  const target_user = req.params.user_id;
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${target_user}'`
+  );
+
+  if (is_private.length === 0) {
+    res.status(400);
+    query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+    return res.send(query_response);
+  }
+
+  const accepted = await _query(
+    `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
+  );
+
+  try {
+    if (is_private[0].is_private && accepted.length == 0) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else if (is_private[0].is_private && !accepted[0].accepted) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else {
+      query_response.data = await _query(
+        `SELECT target_user as user_id FROM User_User WHERE request_user='${target_user}' AND accepted=1`
+      );
+    }
   } catch (error) {
     res.status(400);
     query_response.message = error;
