@@ -349,4 +349,21 @@ router.get("/users/:user_id/followees", _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Get list of follow requests API
+router.get("/users/requests", _auth, async (req, res) => {
+  let query_response = {};
+  const request_user = res.locals.user_id;
+
+  try {
+    query_response.data = await _query(
+      `SELECT target_user, request_user, accepted from User_User where target_user='${request_user}' AND accepted=0`
+    );
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
 module.exports = router;
