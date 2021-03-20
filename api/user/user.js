@@ -4,107 +4,12 @@ const crypto = require("crypto");
 const router = express.Router();
 
 const _query = require("../../database/db");
-const _auth = require("./auth");
+const _auth = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
 router.use((req, res, next) => {
   console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
   next();
-});
-
-// Sign in API
-router.post("/signin", async (req, res) => {
-  const user_id = req.body.user_id;
-  const password = crypto
-    .createHash("sha512")
-    .update(req.body.password)
-    .digest("base64");
-
-  let query_response = {};
-
-  query_response.data = await _query(
-    `SELECT user_id, email, name FROM User WHERE user_id='${user_id}' AND password='${password}'`
-  );
-  if (query_response.data.length == 0) {
-    res.status(400);
-    query_response.message = "User with given info does not exists";
-  } else {
-    query_response.token = jwt.sign(
-      {
-        user_id: query_response.data[0].user_id,
-        email: query_response.data[0].email,
-        name: query_response.data[0].name,
-      },
-      process.env.SECRET_KEY,
-      {
-        expiresIn: "12h",
-      },
-      {
-        algorithm: "RS256",
-      }
-    );
-  }
-
-  res.send(query_response);
-});
-
-// Sign up API
-router.post("/signup", async (req, res) => {
-  let query_response = {};
-
-  const user_id = req.body.user_id;
-  const email = req.body.email;
-  const name = req.body.name;
-  const password = crypto
-    .createHash("sha512")
-    .update(req.body.password)
-    .digest("base64");
-
-  const missing_fields = utils._validate_body(req.body, [
-    "user_id",
-    "email",
-    "name",
-    "password",
-  ]);
-
-  if (missing_fields.length != 0) {
-    res.status(400);
-    query_response.message = `Fields ${missing_fields.toString()} is required.`;
-  } else if (utils._validate_email(email) === false) {
-    res.status(400);
-    query_response.message = "Email is not valid.";
-  } else {
-    try {
-      await _query(
-        `INSERT INTO User (user_id, email, name, password) VALUES ('${user_id}', '${email}', '${name}', '${password}');`
-      );
-      query_response.data = {
-        user_id: user_id,
-        email: email,
-        name: name,
-      };
-      query_response.message = `User: ${user_id} is created.`;
-    } catch (error) {
-      res.status(400);
-      query_response.message = error.message;
-    }
-  }
-
-  res.send(query_response);
-});
-
-// Should be gone before production
-router.get("/users", _auth, async (req, res) => {
-  let query_response = {};
-
-  try {
-    query_response.data = await _query("SELECT * FROM User;");
-  } catch (error) {
-    res.status(400);
-    query_response.message = error;
-  }
-
-  res.send(query_response);
 });
 
 // Follow request API
@@ -207,7 +112,7 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
-    query_response.message = "You can accept yourself";
+    query_response.message = "You can't accept yourself";
     return res.send(query_response);
   }
 
@@ -243,6 +148,176 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
       query_response.message = error;
     }
   }
+  res.send(query_response);
+});
+
+// Update account privacy API
+router.put("/users/private", _auth, async (req, res) => {
+  let query_response = { message: "Account privacy has been updated." };
+  const request_user = res.locals.user_id;
+
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${request_user}'`
+  );
+
+  try {
+    await _query(
+      `UPDATE User set is_private=${Math.abs(
+        is_private[0].is_private - 1
+      )} WHERE user_id='${request_user}'`
+    );
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Get list of user's followers API
+router.get("/users/:user_id/followers", _auth, async (req, res) => {
+  let query_response = {};
+
+  const request_user = res.locals.user_id;
+  const target_user = req.params.user_id;
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${target_user}'`
+  );
+
+  if (is_private.length === 0) {
+    res.status(400);
+    query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+    return res.send(query_response);
+  }
+
+  const accepted = await _query(
+    `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
+  );
+
+  try {
+    if (is_private[0].is_private && accepted.length == 0) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else if (is_private[0].is_private && !accepted[0].accepted) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else {
+      query_response.data = await _query(
+        `SELECT request_user as user_id FROM User_User WHERE target_user='${target_user}' AND accepted=1`
+      );
+    }
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Get list of user's followees API
+router.get("/users/:user_id/followees", _auth, async (req, res) => {
+  let query_response = {};
+
+  const request_user = res.locals.user_id;
+  const target_user = req.params.user_id;
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${target_user}'`
+  );
+
+  if (is_private.length === 0) {
+    res.status(400);
+    query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+    return res.send(query_response);
+  }
+
+  const accepted = await _query(
+    `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
+  );
+
+  try {
+    if (is_private[0].is_private && accepted.length == 0) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else if (is_private[0].is_private && !accepted[0].accepted) {
+      res.status(400);
+      query_response.message = `This account is private.`;
+    } else {
+      query_response.data = await _query(
+        `SELECT target_user as user_id FROM User_User WHERE request_user='${target_user}' AND accepted=1`
+      );
+    }
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Get list of follow requests API
+router.get("/users/requests", _auth, async (req, res) => {
+  let query_response = {};
+  const request_user = res.locals.user_id;
+
+  try {
+    query_response.data = await _query(
+      `SELECT target_user, request_user, accepted from User_User where target_user='${request_user}' AND accepted=0`
+    );
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Get user's profile API
+router.get("/users/:user_id", _auth, async (req, res) => {
+  let query_response = {};
+
+  const request_user = res.locals.user_id;
+  const target_user = req.params.user_id;
+
+  if (request_user === target_user) {
+    query_response.data = await _query(
+      `SELECT user_id, email, name, bio, is_private FROM User WHERE user_id='${target_user}'`
+    );
+    return res.send(query_response);
+  }
+
+  const is_private = await _query(
+    `SELECT is_private FROM User WHERE user_id='${target_user}'`
+  );
+
+  if (is_private.length === 0) {
+    res.status(400);
+    query_response.message = `User with user_id ${req.params.user_id} does not exists`;
+    return res.send(query_response);
+  }
+
+  const accepted = await _query(
+    `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
+  );
+
+  try {
+    if (is_private[0].is_private && accepted.length == 0) {
+      query_response.data = await _query(
+        `SELECT user_id, name, is_private FROM User WHERE user_id='${target_user}'`
+      );
+    } else if (is_private[0].is_private && !accepted[0].accepted) {
+      query_response.data = await _query(
+        `SELECT user_id, name, is_private FROM User WHERE user_id='${target_user}'`
+      );
+    } else {
+      query_response.data = await _query(
+        `SELECT user_id, email, name, bio, is_private FROM User WHERE user_id='${target_user}'`
+      );
+    }
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
   res.send(query_response);
 });
 
