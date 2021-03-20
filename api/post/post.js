@@ -59,7 +59,7 @@ router.post('/posts', _auth, async (req, res) => {
     );
     query_response.data = req.body;
   } catch (error) {
-    query_response.status = '400 Bad Request';
+    res.status(400);
     query_response.message = error;
   }
 
@@ -89,7 +89,7 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
         query_response.message = `Post with id ${post_id} is not your post.`;
       }
     } catch (error) {
-      query_response.status = '400 Bad Request';
+      res.status(400);
       query_response.message = error;
     }
   }
@@ -116,7 +116,7 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
         query_response.message = `Post with id ${post_id} is not your post.`;
       }
     } catch (error) {
-      query_response.status = '400 Bad Request';
+      res.status(400);
       query_response.message = error;
     }
   }
@@ -150,7 +150,7 @@ router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
         query_response.message = `Post with id ${post_id} is not your post.`;
       }
     } catch (error) {
-      query_response.status = '400 Bad Request';
+      res.status(400);
       query_response.message = error;
     }
   }
@@ -184,7 +184,7 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
         query_response.message = `Post with id ${post_id} is not your post.`;
       }
     } catch (error) {
-      query_response.status = '400 Bad Request';
+      res.status(400);
       query_response.message = error;
     }
   }
