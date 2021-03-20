@@ -24,8 +24,8 @@ const _insert = (table, body) => {
   const values = Object.values(body).map((value) => `'${value}'`);
 
   return (query = `INSERT INTO ${table} (${columns.join(
-    ', '
-  )}) VALUES (${values.join(', ')});`);
+    ", "
+  )}) VALUES (${values.join(", ")});`);
 };
 
 const _delete = (table, id) => {
@@ -49,32 +49,34 @@ const _update = (table, id, body) => {
   return (query = `UPDATE ${table} SET ${data} WHERE id=${id};`);
 };
 
-const _convertToTree = (array, idFieldName, parentIdFieldName, childrenFieldName) => {
+const _convertToTree = (
+  array,
+  idFieldName,
+  parentIdFieldName,
+  childrenFieldName
+) => {
   let cloned = array.slice();
 
-  for(let i=cloned.length-1; i>=0; i--){
+  for (let i = cloned.length - 1; i >= 0; i--) {
     let parentId = cloned[i][parentIdFieldName];
 
-    if(parentId){
+    if (parentId) {
       let filtered = array.filter((elem) => {
         return elem[idFieldName].toString() == parentId.toString();
       });
 
-      if(filtered.length){
+      if (filtered.length) {
         let parent = filtered[0];
 
-        if(parent[childrenFieldName]){
+        if (parent[childrenFieldName]) {
           parent[childrenFieldName].unshift(cloned[i]);
-        }
-        else {
+        } else {
           parent[childrenFieldName] = [cloned[i]];
         }
       }
-      cloned.splice(i,1);
+      cloned.splice(i, 1);
     }
   }
-  
-
   return cloned;
 };
 
