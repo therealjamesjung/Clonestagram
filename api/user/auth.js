@@ -73,6 +73,9 @@ router.post("/signup", async (req, res) => {
   } else if (utils._validate_email(email) === false) {
     res.status(400);
     query_response.message = "Email is not valid.";
+  } else if (req.body.password.length < 8) {
+    res.status(400);
+    query_response.message = "Password has to be longer than 8 characters.";
   } else {
     try {
       await _query(
@@ -99,6 +102,49 @@ router.get("/users", _auth, async (req, res) => {
 
   try {
     query_response.data = await _query("SELECT * FROM User;");
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
+// Reset password API
+router.put("/users/password", _auth, async (req, res) => {
+  let query_response = {};
+  const request_user = res.locals.user_id;
+  const prev_pw = crypto
+    .createHash("sha512")
+    .update(req.body.prev_pw)
+    .digest("base64");
+  const new_pw = crypto
+    .createHash("sha512")
+    .update(req.body.new_pw)
+    .digest("base64");
+
+  user = await _query(
+    `SELECT user_id FROM User WHERE user_id='${request_user}' AND password='${prev_pw}'`
+  );
+  try {
+    if (user.length === 0) {
+      query_response.message = `Your previous password wrong.`;
+    } else {
+      if (prev_pw === new_pw) {
+        res.status(400);
+        query_response.message = `You have to change to another password.`;
+        return res.send(query_response);
+      } else if (req.body.new_pw.length < 8) {
+        res.status(400);
+        query_response.message = `Password has to be longer than 8 characters.`;
+        return res.send(query_response);
+      }
+
+      await _query(
+        `UPDATE User set password='${new_pw}' WHERE user_id='${request_user}' AND password='${prev_pw}'`
+      );
+      query_response.message = `Your password has been updated.`;
+    }
   } catch (error) {
     res.status(400);
     query_response.message = error;
