@@ -15,6 +15,9 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
+  const is_exist = await _query(
+    `SELECT user_id FROM User WHERE user_id='${target_user}'`
+  );
   const is_private = await _query(
     `SELECT is_private FROM User WHERE user_id='${target_user}'`
   );
@@ -22,20 +25,24 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
     `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
   );
 
-  try {
-    if (is_private[0].is_private && !accepted[0].accepted) {
-      res.status(400);
-      query_response.message = `This account is private.`;
-    } else {
-      query_response.data = await _query(
-        `SELECT * FROM Post WHERE writer='${target_user}'`
-      );
-    }
-  } catch (error) {
+  if (is_exist.length === 0) {
     res.status(400);
-    query_response.message = error;
+    query_response.message = `User with id '${req.params.user_id}' does not exists`;
+  } else {
+    try {
+      if (is_private[0].is_private && !accepted[0].accepted) {
+        res.status(400);
+        query_response.message = `This account is private.`;
+      } else {
+        query_response.data = await _query(
+          `SELECT * FROM Post WHERE writer='${target_user}'`
+        );
+      }
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
   }
-
   res.send(query_response);
 });
 
