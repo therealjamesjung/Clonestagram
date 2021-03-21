@@ -25,6 +25,8 @@ app.use(API_ROOT, comment);
 app.use(API_ROOT, file);
 app.use(API_ROOT, story);
 
+app.use(API_ROOT + "uploads", express.static(__dirname + `/uploads`));
+
 app.listen(API_PORT, API_HOST, () => {
   console.log(`Clonestagram running at http://${API_HOST}:${API_PORT}`);
 });
