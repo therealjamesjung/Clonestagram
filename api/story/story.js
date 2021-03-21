@@ -6,6 +6,7 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
+// Get stories API
 router.get("/stories/:user_id", async (req, res) => {
   let query_response = {};
 
@@ -39,6 +40,7 @@ router.get("/stories/:user_id", async (req, res) => {
   res.send(query_response);
 });
 
+// Post a story API
 router.post("/stories", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -70,6 +72,7 @@ router.post("/stories", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Delete a story API
 router.delete("/stories/:story_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
