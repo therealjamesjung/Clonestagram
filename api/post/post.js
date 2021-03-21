@@ -5,6 +5,35 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
+router.post("/posts", middleware._auth, async (req, res) => {
+  let query_response = {};
+
+  const writer = res.locals.user_id;
+  const content = req.body.content;
+  const image_url = req.body.image;
+
+  try {
+    let post = await _query(
+      `INSERT INTO Post (content, writer) VALUES ('${content}', '${writer}');`
+    );
+    let file = await _query(
+      `SELECT id FROM File WHERE url='${image_url.join("' OR url='")}';`
+    );
+
+    for (i = 0; i < file.length; i++) {
+      await _query(
+        `INSERT INTO File_Post(post_id, file_id) VALUES ('${post.insertId}', '${file[i].id}')`
+      );
+    }
+    query_response.data = req.body;
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
 router.get("/posts/:user_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -29,9 +58,22 @@ router.get("/posts/:user_id", middleware._auth, async (req, res) => {
         res.status(400);
         query_response.message = `This account is private.`;
       } else {
-        query_response.data = await _query(
+        let post_data = await _query(
           `SELECT * FROM Post WHERE writer='${target_user}'`
         );
+
+        for (i = 0; i < post_data.length; i++) {
+          let image_data = await _query(
+            `SELECT url FROM File JOIN File_Post ON File.id=File_Post.file_id WHERE post_id='${post_data[i].id}'`
+          );
+
+          let image_url = [];
+          for (j = 0; j < image_data.length; j++) {
+            image_url.push(image_data[j].url);
+          }
+          post_data[i].image = image_url;
+        }
+        query_response.data = post_data;
       }
     } catch (error) {
       res.status(400);
