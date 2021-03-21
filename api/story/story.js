@@ -6,33 +6,37 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
-router.get("/stories/:user_id/:url", async (req, res) => {
+router.get("/stories/:user_id", async (req, res) => {
   let query_response = {};
 
+  const is_exist = await _query(
+    `SELECT user_id FROM User WHERE user_id = '${req.params.user_id}';`
+  );
+  if (!is_exist.length) {
+    res.status(400);
+    query_response.message = `User with id '${req.params.user_id}' does not exists`;
+    return res.send(query_response);
+  }
   try {
     const story = await _query(
       `SELECT * FROM Story WHERE id in (SELECT story_id FROM File_Story WHERE file_id in 
-        (SELECT id FROM File WHERE uploader = '${req.params.user_id}' AND url = '${req.params.url}'));`
+        (SELECT id FROM File WHERE uploader = '${req.params.user_id}'));`
     );
-    if (story.length == 0) {
-      res.status(400);
-      query_response.message = "The story does not exist.";
-      res.send(query_response);
+    if (!story.length) {
     } else {
-      fs.readFile("./uploads/" + req.params.url, (err, content) => {
-        if (err) {
-          res.status(400);
-          query_response.data = err;
-        }
-        //query_response.data = story;
-        res.end(content);
-      });
+      for (let i = 0; i < story.length; i++) {
+        const file = await _query(
+          `SELECT url FROM File WHERE id = (SELECT file_id FROM File_Story WHERE story_id = ${story[i].id});`
+        );
+        story[i].url = file[0].url;
+      }
     }
+    query_response.data = story;
   } catch (error) {
     res.status(400);
     query_response.data = error;
-    res.send(query_response);
   }
+  res.send(query_response);
 });
 
 router.post("/stories", middleware._auth, async (req, res) => {
