@@ -1,18 +1,18 @@
-const express = require("express");
-const bodyparser = require("body-parser");
-const cors = require("cors");
+const express = require('express');
+const bodyparser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
 const API_PORT = process.env.API_PORT || 3000;
-const API_HOST = process.env.API_HOST || "localhost";
-const API_ROOT = "/api/v1/";
+const API_HOST = process.env.API_HOST || 'localhost';
+const API_ROOT = '/api/v1/';
 
-const auth = require("./api/user/auth");
-const user = require("./api/user/user");
-const post = require("./api/post/post");
-const comment = require("./api/comment/comment");
-const file = require("./api/file/file");
-const story = require("./api/story/story");
+const auth = require('./api/user/auth');
+const user = require('./api/user/user');
+const post = require('./api/post/post');
+const comment = require('./api/comment/comment');
+const file = require('./api/file/file');
+const story = require('./api/story/story');
 
 app.use(cors());
 app.use(bodyparser.json());
