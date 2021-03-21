@@ -90,7 +90,7 @@ router.post(
   }
 );
 
-router.get("/files", _auth, async (req, res) => {
+router.get("/files", async (req, res) => {
   let query_response = {};
   query_response.data = await _query("SELECT * from File");
 
