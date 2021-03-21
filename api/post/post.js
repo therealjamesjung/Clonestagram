@@ -54,7 +54,10 @@ router.get("/posts/:user_id", middleware._auth, async (req, res) => {
     query_response.message = `User with id '${req.params.user_id}' does not exists`;
   } else {
     try {
-      if (is_private[0].is_private && !accepted[0].accepted) {
+      if (is_private[0].is_private && accepted.length == 0) {
+        res.status(400);
+        query_response.message = `This account is private.`;
+      } else if (is_private[0].is_private && !accepted[0].accepted) {
         res.status(400);
         query_response.message = `This account is private.`;
       } else {
