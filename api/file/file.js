@@ -33,34 +33,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.post(
-  "/uploadStory",
-  middleware._auth,
-  upload.single("file"),
-  async (req, res, next) => {
-    let query_response = {};
-
-    if (req.fileValidationError) {
-      res.status(400);
-      query_response.message = req.fileValidationError;
-      return res.send(query_response);
-    }
-    try {
-      await _query(
-        `INSERT INTO File (filename, type, size, url, uploader)
-        VALUES ('${req.file.originalname}','${req.file.mimetype}',${req.file.size},'${req.file.filename}','${res.locals.user_id}');`
-      );
-      query_response.data = req.file.filename;
-    } catch (error) {
-      res.status(400);
-      query_response.data = error;
-    }
-    query_response.message = "The file has been uploaded successfully.";
-    res.send(query_response);
-  }
-);
-
-router.post(
-  "/uploadPost",
+  "/uploadFiles",
   middleware._auth,
   upload.array("files", 10),
   async (req, res, next) => {
