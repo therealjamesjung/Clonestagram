@@ -44,7 +44,7 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
     `SELECT accepted FROM User_User WHERE target_user='${target_user}' AND request_user='${request_user}'`
   );
 
-  if (is_exist.length === 0) {
+  if (!is_exist.length) {
     res.status(400);
     query_response.message = `User with id '${req.params.user_id}' does not exists`;
   } else {
@@ -74,7 +74,7 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
   const content = req.body.content;
   const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  if (writer.length === 0) {
+  if (!writer.length) {
     res.status(400);
     query_response.message = `Post with id ${post_id} does not exists.`;
   } else {
@@ -104,7 +104,7 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
   const post_id = req.params.post_id;
   const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  if (writer.length === 0) {
+  if (!writer.length) {
     res.status(400);
     query_response.message = `Post with id ${post_id} does not exists.`;
   } else {
@@ -131,7 +131,7 @@ router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
   const post_id = req.params.post_id;
   const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  if (writer.length === 0) {
+  if (!writer.length) {
     res.status(400);
     query_response.message = `Post with id ${post_id} does not exists.`;
   } else {
@@ -165,7 +165,7 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
   const post_id = req.params.post_id;
   const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  if (writer.length === 0) {
+  if (!writer.length) {
     res.status(400);
     query_response.message = `Post with id ${post_id} does not exists.`;
   } else {
@@ -201,7 +201,7 @@ router.post('/posts/:post_id/like', _auth, async (req, res) => {
     `SELECT writer, likes FROM Post WHERE id=${post_id}`
   );
 
-  if (post.length === 0) {
+  if (!post.length) {
     res.status(400);
     query_response.message = `Post with id ${post_id} does not exists.`;
   } else {
@@ -220,7 +220,7 @@ router.post('/posts/:post_id/like', _auth, async (req, res) => {
         const liked = await _query(
           `SELECT * FROM Post_User WHERE post_id=${post_id} AND user_id='${user_id}'`
         );
-        if (liked.length === 0) {
+        if (!liked.length) {
           await _query(
             `INSERT INTO Post_User (post_id, user_id) VALUES ('${post_id}', '${user_id}')`
           );
