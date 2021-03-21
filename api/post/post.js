@@ -10,6 +10,25 @@ router.use((req, res, next) => {
   next();
 });
 
+router.post('/posts', _auth, async (req, res) => {
+  let query_response = {};
+
+  const writer = res.locals.user_id;
+  const content = req.body.content;
+
+  try {
+    await _query(
+      `INSERT INTO Post (content, writer) VALUES ('${content}', '${writer}');`
+    );
+    query_response.data = req.body;
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
 router.get('/posts/:user_id', _auth, async (req, res) => {
   let query_response = {};
 
@@ -42,25 +61,6 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
       res.status(400);
       query_response.message = error;
     }
-  }
-
-  res.send(query_response);
-});
-
-router.post('/posts', _auth, async (req, res) => {
-  let query_response = {};
-
-  const writer = res.locals.user_id;
-  const content = req.body.content;
-
-  try {
-    await _query(
-      `INSERT INTO Post (content, writer) VALUES ('${content}', '${writer}');`
-    );
-    query_response.data = req.body;
-  } catch (error) {
-    res.status(400);
-    query_response.message = error;
   }
 
   res.send(query_response);
