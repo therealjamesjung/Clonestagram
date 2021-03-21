@@ -91,7 +91,6 @@ router.delete("/stories/:story_id", middleware._auth, async (req, res) => {
         const url = await _query(
           `SELECT url FROM File WHERE id = ${file_story[0].file_id}`
         );
-        await _query(utils._delete("File_Story", file_story[0].id));
         await _query(utils._delete("Story", file_story[0].story_id));
         await _query(utils._delete("File", file_story[0].file_id));
         fs.unlink("./uploads/" + url[0].url, (err) => {
