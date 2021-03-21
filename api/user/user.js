@@ -175,6 +175,14 @@ router.get("/users/:user_id/followers", middleware._auth, async (req, res) => {
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
+
+  if (request_user === target_user) {
+    query_response.data = await _query(
+      `SELECT request_user as user_id FROM User_User WHERE target_user='${target_user}' AND accepted=1`
+    );
+    return res.send(query_response);
+  }
+
   const is_private = await _query(
     `SELECT is_private FROM User WHERE user_id='${target_user}'`
   );
@@ -215,6 +223,14 @@ router.get("/users/:user_id/followees", middleware._auth, async (req, res) => {
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
+
+  if (request_user === target_user) {
+    query_response.data = await _query(
+      `SELECT target_user as user_id FROM User_User WHERE request_user='${target_user}' AND accepted=1`
+    );
+    return res.send(query_response);
+  }
+
   const is_private = await _query(
     `SELECT is_private FROM User WHERE user_id='${target_user}'`
   );
