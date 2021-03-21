@@ -90,4 +90,11 @@ router.post(
   }
 );
 
+router.get("/files", _auth, async (req, res) => {
+  let query_response = {};
+  query_response.data = await _query("SELECT * from File");
+
+  res.send(query_response);
+});
+
 module.exports = router;
