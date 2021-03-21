@@ -16,7 +16,8 @@ router.get("/stories/:user_id/:url", async (req, res) => {
 
   try {
     const story = await _query(
-      `SELECT * FROM Story JOIN File ON story.file_id = file.id AND uploader = '${req.params.user_id}' AND url = '${req.params.url}';`
+      `SELECT * FROM Story WHERE id in (SELECT story_id FROM File_Story WHERE file_id in 
+        (SELECT id FROM File WHERE uploader = '${req.params.user_id}' AND url = '${req.params.url}'));`
     );
     if (story.length == 0) {
       res.status(400);
@@ -28,6 +29,7 @@ router.get("/stories/:user_id/:url", async (req, res) => {
           res.status(400);
           query_response.data = err;
         }
+        //query_response.data = story;
         res.end(content);
       });
     }
@@ -50,9 +52,17 @@ router.post("/stories", _auth, async (req, res) => {
       query_response.message = "The url does not exist.";
     } else {
       await _query(
-        `INSERT INTO Story (writer, file_id) VALUES ('${res.locals.user_id}', ${file_id[0].id});`
+        `INSERT INTO Story (writer) VALUES ('${res.locals.user_id}');`
       );
-      query_response.data = req.body;
+      const story_id = await _query(`SELECT MAX(id) as id FROM Story;`);
+      await _query(
+        `INSERT INTO File_Story (file_id, story_id) VALUES (${file_id[0].id}, ${story_id[0].id});`
+      );
+      const story = await _query(
+        `SELECT writer, created_at FROM Story WHERE id = ${story_id[0].id};`
+      );
+      story[0].url = req.body.url;
+      query_response.data = story;
     }
   } catch (error) {
     res.status(400);
@@ -61,27 +71,34 @@ router.post("/stories", _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.delete("/stories/:user_id/:url", _auth, async (req, res) => {
+router.delete("/stories/:story_id", _auth, async (req, res) => {
   let query_response = {};
 
   try {
     const story = await _query(
-      `SELECT Story.id, Story.file_id FROM Story JOIN File ON story.file_id = file.id AND uploader = '${req.params.user_id}' AND url = '${req.params.url}';`
+      `SELECT * FROM Story WHERE id = ${req.params.story_id};`
     );
     if (story.length == 0) {
       res.status(400);
       query_response.message = "The story does not exist.";
     } else {
-      if (res.locals.user_id == req.params.user_id) {
-        await _query(utils._delete("Story", story[0].id));
-        await _query(utils._delete("File", story[0].file_id));
-        fs.unlink("./uploads/" + req.params.url, (err) => {
+      if (res.locals.user_id == story[0].writer) {
+        const file_story = await _query(
+          `SELECT * FROM File_Story WHERE story_id = ${req.params.story_id}`
+        );
+        const url = await _query(
+          `SELECT url FROM File WHERE id = ${file_story[0].file_id}`
+        );
+        await _query(utils._delete("File_Story", file_story[0].id));
+        await _query(utils._delete("Story", file_story[0].story_id));
+        await _query(utils._delete("File", file_story[0].file_id));
+        fs.unlink("./uploads/" + url[0].url, (err) => {
           if (err) {
             query_response.data = err;
             return res.send(query_response);
           }
         });
-        query_response.message = `You delete a story '${req.params.user_id}/${req.params.url}' successfully.`;
+        query_response.message = `You delete a story '${res.locals.user_id}/${url[0].url}' successfully.`;
       } else {
         res.status(400);
         query_response.message = "No authority.";
@@ -90,7 +107,6 @@ router.delete("/stories/:user_id/:url", _auth, async (req, res) => {
   } catch (error) {
     res.status(400);
     query_response.data = error;
-    res.send(query_response);
   }
   res.send(query_response);
 });
