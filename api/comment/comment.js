@@ -76,7 +76,7 @@ router.post("/comments/:post_id", _auth, async (req, res) => {
             VALUES ('${content}','${writer}',${post_id});`
     );
     const comment = await _query(
-      `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
+      `SELECT content, writer, created_at FROM Comment WHERE id IN (SELECT MAX(id) FROM Comment);`
     );
     query_response.data = comment;
   } catch (error) {
@@ -114,7 +114,7 @@ router.post("/comments/:comment_id/reply", _auth, async (req, res) => {
       );
     }
     const comment = await _query(
-      `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
+      `SELECT content, writer, created_at FROM Comment WHERE id IN (SELECT MAX(id) FROM Comment);`
     );
     query_response.data = comment;
   } catch (error) {
