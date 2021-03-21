@@ -192,4 +192,60 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+router.post('/posts/:post_id/like', _auth, async (req, res) => {
+  let query_response = {};
+
+  const user_id = res.locals.user_id;
+  const post_id = req.params.post_id;
+  const post = await _query(
+    `SELECT writer, likes FROM Post WHERE id=${post_id}`
+  );
+
+  if (post.length === 0) {
+    res.status(400);
+    query_response.message = `Post with id ${post_id} does not exists.`;
+  } else {
+    const is_private = await _query(
+      `SELECT is_private FROM User WHERE user_id='${post[0].writer}'`
+    );
+    const accepted = await _query(
+      `SELECT accepted FROM User_User WHERE target_user='${post[0].writer}' AND request_user='${user_id}'`
+    );
+
+    try {
+      if (is_private[0].is_private && !accepted[0].accepted) {
+        res.status(400);
+        query_response.message = `The account of this post's writer is private.`;
+      } else {
+        const liked = await _query(
+          `SELECT * FROM Post_User WHERE post_id=${post_id} AND user_id='${user_id}'`
+        );
+        if (liked.length === 0) {
+          await _query(
+            `INSERT INTO Post_User (post_id, user_id) VALUES ('${post_id}', '${user_id}')`
+          );
+          await _query(
+            `UPDATE Post SET likes=${post[0].likes + 1} WHERE id=${post_id}`
+          );
+        } else {
+          await _query(
+            `DELETE FROM Post_User WHERE post_id='${post_id}' AND user_id='${user_id}'`
+          );
+          await _query(
+            `UPDATE Post SET likes=${post[0].likes - 1} WHERE id=${post_id}`
+          );
+        }
+      }
+      query_response.data = await _query(
+        `SELECT id, likes FROM Post WHERE id='${post_id}'`
+      );
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
+  }
+
+  res.send(query_response);
+});
+
 module.exports = router;
