@@ -39,6 +39,27 @@ router.get("/posts/:user_id", middleware._auth, async (req, res) => {
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
+
+  if (request_user === target_user) {
+    let post_data = await _query(
+      `SELECT * FROM Post WHERE writer='${target_user}'`
+    );
+
+    for (i = 0; i < post_data.length; i++) {
+      let image_data = await _query(
+        `SELECT url FROM File JOIN File_Post ON File.id=File_Post.file_id WHERE post_id='${post_data[i].id}'`
+      );
+
+      let image_url = [];
+      for (j = 0; j < image_data.length; j++) {
+        image_url.push(image_data[j].url);
+      }
+      post_data[i].image = image_url;
+    }
+    query_response.data = post_data;
+    return res.send(query_response);
+  }
+
   const is_exist = await _query(
     `SELECT user_id FROM User WHERE user_id='${target_user}'`
   );
