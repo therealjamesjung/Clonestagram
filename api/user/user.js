@@ -4,16 +4,11 @@ const crypto = require("crypto");
 const router = express.Router();
 
 const _query = require("../../database/db");
-const _auth = require("../../utils/middleware");
+const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
-
 // Follow request API
-router.put("/users/:user_id/follow", _auth, async (req, res) => {
+router.put("/users/:user_id/follow", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
@@ -58,7 +53,7 @@ router.put("/users/:user_id/follow", _auth, async (req, res) => {
 });
 
 // Unfollow request API
-router.put("/users/:user_id/unfollow", _auth, async (req, res) => {
+router.put("/users/:user_id/unfollow", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
@@ -108,7 +103,7 @@ router.put("/users/:user_id/unfollow", _auth, async (req, res) => {
 });
 
 // Accept follow request API
-router.put("/users/:user_id/accept", _auth, async (req, res) => {
+router.put("/users/:user_id/accept", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
@@ -152,7 +147,7 @@ router.put("/users/:user_id/accept", _auth, async (req, res) => {
 });
 
 // Update account privacy API
-router.put("/users/private", _auth, async (req, res) => {
+router.put("/users/private", middleware._auth, async (req, res) => {
   let query_response = { message: "Account privacy has been updated." };
   const request_user = res.locals.user_id;
 
@@ -175,7 +170,7 @@ router.put("/users/private", _auth, async (req, res) => {
 });
 
 // Get list of user's followers API
-router.get("/users/:user_id/followers", _auth, async (req, res) => {
+router.get("/users/:user_id/followers", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
@@ -215,7 +210,7 @@ router.get("/users/:user_id/followers", _auth, async (req, res) => {
 });
 
 // Get list of user's followees API
-router.get("/users/:user_id/followees", _auth, async (req, res) => {
+router.get("/users/:user_id/followees", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
@@ -255,7 +250,7 @@ router.get("/users/:user_id/followees", _auth, async (req, res) => {
 });
 
 // Get list of follow requests API
-router.get("/users/requests", _auth, async (req, res) => {
+router.get("/users/requests", middleware._auth, async (req, res) => {
   let query_response = {};
   const request_user = res.locals.user_id;
 
@@ -272,7 +267,7 @@ router.get("/users/requests", _auth, async (req, res) => {
 });
 
 // Get user's profile API
-router.get("/users/:user_id", _auth, async (req, res) => {
+router.get("/users/:user_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;

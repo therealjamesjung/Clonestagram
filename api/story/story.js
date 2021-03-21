@@ -3,13 +3,8 @@ const router = express.Router();
 const fs = require("fs");
 
 const _query = require("../../database/db");
-const _auth = require("../../utils/middleware");
+const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
-
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
 
 router.get("/stories/:user_id/:url", async (req, res) => {
   let query_response = {};
@@ -40,7 +35,7 @@ router.get("/stories/:user_id/:url", async (req, res) => {
   }
 });
 
-router.post("/stories", _auth, async (req, res) => {
+router.post("/stories", middleware._auth, async (req, res) => {
   let query_response = {};
 
   try {
@@ -71,7 +66,7 @@ router.post("/stories", _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.delete("/stories/:story_id", _auth, async (req, res) => {
+router.delete("/stories/:story_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   try {

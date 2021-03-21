@@ -4,13 +4,8 @@ const crypto = require("crypto");
 const router = express.Router();
 
 const _query = require("../../database/db");
-const _auth = require("../../utils/middleware");
+const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
-
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
 
 // Sign in API
 router.post("/signin", async (req, res) => {
@@ -97,7 +92,7 @@ router.post("/signup", async (req, res) => {
 });
 
 // Should be gone before production
-router.get("/users", _auth, async (req, res) => {
+router.get("/users", middleware._auth, async (req, res) => {
   let query_response = {};
 
   try {
@@ -111,7 +106,7 @@ router.get("/users", _auth, async (req, res) => {
 });
 
 // Reset password API
-router.put("/users/password", _auth, async (req, res) => {
+router.put("/users/password", middleware._auth, async (req, res) => {
   let query_response = {};
   const request_user = res.locals.user_id;
   const prev_pw = crypto
@@ -154,7 +149,7 @@ router.put("/users/password", _auth, async (req, res) => {
 });
 
 // Reset bio API
-router.put("/users/bio", _auth, async (req, res) => {
+router.put("/users/bio", middleware._auth, async (req, res) => {
   let query_response = {};
   const request_user = res.locals.user_id;
 

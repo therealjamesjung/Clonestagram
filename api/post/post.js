@@ -1,35 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const _query = require('../../database/db');
-const _auth = require('../../utils/middleware');
-const utils = require('../../utils/utils');
+const _query = require("../../database/db");
+const middleware = require("../../utils/middleware");
+const utils = require("../../utils/utils");
 
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
-
-router.post('/posts', _auth, async (req, res) => {
-  let query_response = {};
-
-  const writer = res.locals.user_id;
-  const content = req.body.content;
-
-  try {
-    await _query(
-      `INSERT INTO Post (content, writer) VALUES ('${content}', '${writer}');`
-    );
-    query_response.data = req.body;
-  } catch (error) {
-    res.status(400);
-    query_response.message = error;
-  }
-
-  res.send(query_response);
-});
-
-router.get('/posts/:user_id', _auth, async (req, res) => {
+router.get("/posts/:user_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
@@ -66,7 +42,7 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.put('/posts/:post_id', _auth, async (req, res) => {
+router.put("/posts/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -97,7 +73,7 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.delete('/posts/:post_id', _auth, async (req, res) => {
+router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -110,7 +86,7 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
   } else {
     try {
       if (user_id === writer[0].writer) {
-        await _query(utils._delete('Post', post_id));
+        await _query(utils._delete("Post", post_id));
         query_response.message = `Post id ${post_id} has been successfully deleted.`;
       } else {
         query_response.message = `Post with id ${post_id} is not your post.`;
@@ -124,41 +100,45 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
-  let query_response = {};
+router.put(
+  "/posts/:post_id/disable_cmt",
+  middleware._auth,
+  async (req, res) => {
+    let query_response = {};
 
-  const user_id = res.locals.user_id;
-  const post_id = req.params.post_id;
-  const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
+    const user_id = res.locals.user_id;
+    const post_id = req.params.post_id;
+    const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  if (!writer.length) {
-    res.status(400);
-    query_response.message = `Post with id ${post_id} does not exists.`;
-  } else {
-    try {
-      if (user_id === writer[0].writer) {
-        const prev = await _query(
-          `SELECT comment_disabled FROM Post WHERE id=${post_id}`
-        );
-        await _query(
-          `UPDATE Post SET comment_disabled=${
-            (prev[0].comment_disabled + 1) % 2
-          } WHERE id=${post_id}`
-        );
-        query_response.message = `Accessibility of comments has been successfully updated.`;
-      } else {
-        query_response.message = `Post with id ${post_id} is not your post.`;
-      }
-    } catch (error) {
+    if (!writer.length) {
       res.status(400);
-      query_response.message = error;
+      query_response.message = `Post with id ${post_id} does not exists.`;
+    } else {
+      try {
+        if (user_id === writer[0].writer) {
+          const prev = await _query(
+            `SELECT comment_disabled FROM Post WHERE id=${post_id}`
+          );
+          await _query(
+            `UPDATE Post SET comment_disabled=${
+              (prev[0].comment_disabled + 1) % 2
+            } WHERE id=${post_id}`
+          );
+          query_response.message = `Accessibility of comments has been successfully updated.`;
+        } else {
+          query_response.message = `Post with id ${post_id} is not your post.`;
+        }
+      } catch (error) {
+        res.status(400);
+        query_response.message = error;
+      }
     }
+
+    res.send(query_response);
   }
+);
 
-  res.send(query_response);
-});
-
-router.put('/posts/:post_id/archive', _auth, async (req, res) => {
+router.put("/posts/:post_id/archive", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -192,7 +172,7 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.post('/posts/:post_id/like', _auth, async (req, res) => {
+router.post("/posts/:post_id/like", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
