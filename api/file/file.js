@@ -33,7 +33,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.post(
-  "/uploadFiles",
+  "/files",
   middleware._auth,
   upload.array("files", 10),
   async (req, res, next) => {
