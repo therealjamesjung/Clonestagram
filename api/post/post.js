@@ -10,6 +10,7 @@ router.use((req, res, next) => {
   next();
 });
 
+// Post upload API
 router.post('/posts', _auth, async (req, res) => {
   let query_response = {};
 
@@ -29,6 +30,7 @@ router.post('/posts', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// User's posts get API
 router.get('/posts/:user_id', _auth, async (req, res) => {
   let query_response = {};
 
@@ -66,6 +68,7 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post's content update API
 router.put('/posts/:post_id', _auth, async (req, res) => {
   let query_response = {};
 
@@ -97,6 +100,7 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post delete API
 router.delete('/posts/:post_id', _auth, async (req, res) => {
   let query_response = {};
 
@@ -124,6 +128,7 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post's comment accessibility update API
 router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
   let query_response = {};
 
@@ -158,6 +163,7 @@ router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post archive/unarchive API
 router.put('/posts/:post_id/archive', _auth, async (req, res) => {
   let query_response = {};
 
@@ -192,6 +198,7 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post like/unlike API
 router.post('/posts/:post_id/like', _auth, async (req, res) => {
   let query_response = {};
 
