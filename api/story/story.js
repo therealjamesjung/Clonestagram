@@ -6,8 +6,8 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
-// Get stories API
-router.get("/stories/:user_id", async (req, res) => {
+// Get stories posted by a specific user API
+router.get("/stories/:user_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const is_exist = await _query(
@@ -21,10 +21,9 @@ router.get("/stories/:user_id", async (req, res) => {
   try {
     const story = await _query(
       `SELECT * FROM Story WHERE id in (SELECT story_id FROM File_Story WHERE file_id in 
-        (SELECT id FROM File WHERE uploader = '${req.params.user_id}'));`
+        (SELECT id FROM File WHERE uploader = '${req.params.user_id}')) AND created_at > DATE_ADD(now(), INTERVAL -24 HOUR);`
     );
-    if (!story.length) {
-    } else {
+    if (story) {
       for (let i = 0; i < story.length; i++) {
         const file = await _query(
           `SELECT url FROM File WHERE id = (SELECT file_id FROM File_Story WHERE story_id = ${story[i].id});`
