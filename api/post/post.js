@@ -12,7 +12,6 @@ router.use((req, res, next) => {
 
 // Post upload API
 router.post("/posts", middleware._auth, async (req, res) => {
-
   let query_response = {};
 
   const writer = res.locals.user_id;
@@ -42,7 +41,7 @@ router.post("/posts", middleware._auth, async (req, res) => {
 });
 
 // Followers' posts get API
-router.get('/feed', _auth, async (req, res) => {
+router.get("/feed", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const page = req.query.page;
@@ -146,7 +145,6 @@ router.get("/posts/:user_id", middleware._auth, async (req, res) => {
 
 // Post's content update API
 router.put("/posts/:post_id", middleware._auth, async (req, res) => {
-
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -205,14 +203,12 @@ router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
-
 // Post's comment accessibility update API
 router.put(
   "/posts/:post_id/disable_cmt",
   middleware._auth,
   async (req, res) => {
     let query_response = {};
-
 
     const user_id = res.locals.user_id;
     const post_id = req.params.post_id;
