@@ -23,4 +23,9 @@ const _auth = (req, res, next) => {
   }
 };
 
-module.exports = _auth;
+const _log = (req, res, next) => {
+  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
+  next();
+};
+
+module.exports = { _auth, _log };

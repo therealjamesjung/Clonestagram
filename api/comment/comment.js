@@ -2,15 +2,11 @@ const express = require("express");
 const router = express.Router();
 
 const _query = require("../../database/db");
-const _auth = require("../../utils/middleware");
+const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
-
-router.get("/comments/:post_id", _auth, async (req, res) => {
+// Get comments API
+router.get("/comments/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user = res.locals.user_id;
@@ -57,7 +53,8 @@ router.get("/comments/:post_id", _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.post("/comments/:post_id", _auth, async (req, res) => {
+// Write a comment API
+router.post("/comments/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const content = req.body.content;
@@ -76,7 +73,7 @@ router.post("/comments/:post_id", _auth, async (req, res) => {
             VALUES ('${content}','${writer}',${post_id});`
     );
     const comment = await _query(
-      `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
+      `SELECT content, writer, created_at FROM Comment WHERE id IN (SELECT MAX(id) FROM Comment);`
     );
     query_response.data = comment;
   } catch (error) {
@@ -86,45 +83,51 @@ router.post("/comments/:post_id", _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.post("/comments/:comment_id/reply", _auth, async (req, res) => {
-  let query_response = {};
+// Reply to a specific comment API
+router.post(
+  "/comments/:comment_id/reply",
+  middleware._auth,
+  async (req, res) => {
+    let query_response = {};
 
-  const content = req.body.content;
-  const writer = res.locals.user_id;
-  const data = await _query(
-    `SELECT post, parent_comment FROM Comment WHERE id = ${req.params.comment_id};`
-  );
-  const parent_comment = req.params.comment_id;
+    const content = req.body.content;
+    const writer = res.locals.user_id;
+    const data = await _query(
+      `SELECT post, parent_comment FROM Comment WHERE id = ${req.params.comment_id};`
+    );
+    const parent_comment = req.params.comment_id;
 
-  if (data.length == 0) {
-    query_response.message = `Comment #${req.params.comment_id} does not exist.`;
-    return res.send(query_response);
-  }
-
-  try {
-    if (data[0].parent_comment == null) {
-      await _query(
-        `INSERT INTO Comment (content, writer, post, parent_comment)
-                VALUES ('${content}', '${writer}', ${data[0].post}, ${parent_comment});`
-      );
-    } else {
-      await _query(
-        `INSERT INTO Comment (content, writer, post, parent_comment)
-                VALUES ('${content}', '${writer}', ${data[0].post}, ${data[0].parent_comment});`
-      );
+    if (data.length == 0) {
+      query_response.message = `Comment #${req.params.comment_id} does not exist.`;
+      return res.send(query_response);
     }
-    const comment = await _query(
-      `SELECT content, writer, created_at FROM Comment WHERE content = '${content}';`
-    );
-    query_response.data = comment;
-  } catch (error) {
-    res.status(400);
-    query_response.data = error;
-  }
-  res.send(query_response);
-});
 
-router.delete("/comments/:comment_id", _auth, async (req, res) => {
+    try {
+      if (data[0].parent_comment == null) {
+        await _query(
+          `INSERT INTO Comment (content, writer, post, parent_comment)
+                VALUES ('${content}', '${writer}', ${data[0].post}, ${parent_comment});`
+        );
+      } else {
+        await _query(
+          `INSERT INTO Comment (content, writer, post, parent_comment)
+                VALUES ('${content}', '${writer}', ${data[0].post}, ${data[0].parent_comment});`
+        );
+      }
+      const comment = await _query(
+        `SELECT content, writer, created_at FROM Comment WHERE id IN (SELECT MAX(id) FROM Comment);`
+      );
+      query_response.data = comment;
+    } catch (error) {
+      res.status(400);
+      query_response.data = error;
+    }
+    res.send(query_response);
+  }
+);
+
+// Delete a comment API
+router.delete("/comments/:comment_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const writer = res.locals.user_id;
@@ -162,48 +165,54 @@ router.delete("/comments/:comment_id", _auth, async (req, res) => {
   res.send(query_response);
 });
 
-router.post("/comments/:comment_id/like", _auth, async (req, res) => {
-  let query_response = {};
+// Like a comment API
+router.post(
+  "/comments/:comment_id/like",
+  middleware._auth,
+  async (req, res) => {
+    let query_response = {};
 
-  const user = res.locals.user_id;
-  const comment_id = req.params.comment_id;
-  const is_liked = await _query(
-    `SELECT * FROM Comment_User WHERE comment_id = ${comment_id} AND user_id = '${user}';`
-  );
-  const comment = await _query(
-    `SELECT * FROM Comment WHERE id = ${comment_id};`
-  );
+    const user = res.locals.user_id;
+    const comment_id = req.params.comment_id;
+    const is_liked = await _query(
+      `SELECT * FROM Comment_User WHERE comment_id = ${comment_id} AND user_id = '${user}';`
+    );
+    const comment = await _query(
+      `SELECT * FROM Comment WHERE id = ${comment_id};`
+    );
 
-  if (comment.length == 0) {
-    query_response.message = `Comment #${req.params.comment_id} does not exist.`;
-    return res.send(query_response);
-  }
-
-  try {
-    if (is_liked.length == 0) {
-      await _query(
-        `INSERT INTO Comment_User (comment_id, user_id)
-                    VALUES (${comment_id}, '${user}');`
-      );
-      await _query(
-        `UPDATE Comment SET likes = likes + 1 where id = ${comment_id};`
-      );
-      query_response.message = `'${user}' like a comment #${comment_id}.`;
-    } else {
-      await _query(utils._delete("Comment_User", is_liked[0].id));
-      await _query(
-        `UPDATE Comment SET likes = likes - 1 where id = ${comment_id};`
-      );
-      query_response.message = `'${user}' cancel to like a comment #${comment_id}.`;
+    if (comment.length == 0) {
+      query_response.message = `Comment #${req.params.comment_id} does not exist.`;
+      return res.send(query_response);
     }
-  } catch (error) {
-    res.status(400);
-    query_response.data = error;
-  }
-  res.send(query_response);
-});
 
-router.get("/comments/:comment_id/like", _auth, async (req, res) => {
+    try {
+      if (is_liked.length == 0) {
+        await _query(
+          `INSERT INTO Comment_User (comment_id, user_id)
+                    VALUES (${comment_id}, '${user}');`
+        );
+        await _query(
+          `UPDATE Comment SET likes = likes + 1 where id = ${comment_id};`
+        );
+        query_response.message = `'${user}' like a comment #${comment_id}.`;
+      } else {
+        await _query(utils._delete("Comment_User", is_liked[0].id));
+        await _query(
+          `UPDATE Comment SET likes = likes - 1 where id = ${comment_id};`
+        );
+        query_response.message = `'${user}' cancel to like a comment #${comment_id}.`;
+      }
+    } catch (error) {
+      res.status(400);
+      query_response.data = error;
+    }
+    res.send(query_response);
+  }
+);
+
+// Get list of users who liked a specific comment API
+router.get("/comments/:comment_id/like", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user = res.locals.user_id;
