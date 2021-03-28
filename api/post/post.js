@@ -5,8 +5,8 @@ const _query = require('../../database/db');
 const middleware = require('../../utils/middleware');
 const utils = require('../../utils/utils');
 
-// Post upload API
-router.post('/posts', middleware._auth, async (req, res) => {
+// Post upload API=
+router.post('/posts', middleware._auth, async (req, res) => {=
   let query_response = {};
 
   const writer = res.locals.user_id;
