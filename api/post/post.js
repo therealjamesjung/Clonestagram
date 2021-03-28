@@ -1,18 +1,12 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-const _query = require("../../database/db");
-const middleware = require("../../utils/middleware");
-const utils = require("../../utils/utils");
-
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
+const _query = require('../../database/db');
+const middleware = require('../../utils/middleware');
+const utils = require('../../utils/utils');
 
 // Post upload API
-router.post("/posts", middleware._auth, async (req, res) => {
-
+router.post('/posts', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const writer = res.locals.user_id;
@@ -42,7 +36,7 @@ router.post("/posts", middleware._auth, async (req, res) => {
 });
 
 // Followers' posts get API
-router.get('/feed', _auth, async (req, res) => {
+router.get('/feed', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const page = req.query.page;
@@ -70,7 +64,7 @@ router.get('/feed', _auth, async (req, res) => {
 });
 
 // User's posts get API
-router.get("/posts/:user_id", middleware._auth, async (req, res) => {
+router.get('/posts/:user_id', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
@@ -145,8 +139,7 @@ router.get("/posts/:user_id", middleware._auth, async (req, res) => {
 });
 
 // Post's content update API
-router.put("/posts/:post_id", middleware._auth, async (req, res) => {
-
+router.put('/posts/:post_id', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -178,7 +171,7 @@ router.put("/posts/:post_id", middleware._auth, async (req, res) => {
 });
 
 // Post delete API
-router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
+router.delete('/posts/:post_id', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -191,7 +184,7 @@ router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
   } else {
     try {
       if (user_id === writer[0].writer) {
-        await _query(utils._delete("Post", post_id));
+        await _query(utils._delete('Post', post_id));
         query_response.message = `Post id ${post_id} has been successfully deleted.`;
       } else {
         query_response.message = `Post with id ${post_id} is not your post.`;
@@ -205,14 +198,12 @@ router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
-
 // Post's comment accessibility update API
 router.put(
-  "/posts/:post_id/disable_cmt",
+  '/posts/:post_id/disable_cmt',
   middleware._auth,
   async (req, res) => {
     let query_response = {};
-
 
     const user_id = res.locals.user_id;
     const post_id = req.params.post_id;
@@ -247,7 +238,7 @@ router.put(
 );
 
 // Post archive/unarchive API
-router.put("/posts/:post_id/archive", middleware._auth, async (req, res) => {
+router.put('/posts/:post_id/archive', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -282,7 +273,7 @@ router.put("/posts/:post_id/archive", middleware._auth, async (req, res) => {
 });
 
 // Post like/unlike API
-router.post("/posts/:post_id/like", middleware._auth, async (req, res) => {
+router.post('/posts/:post_id/like', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
