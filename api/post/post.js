@@ -30,6 +30,34 @@ router.post('/posts', _auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Follower's posts get API
+router.get('/feed', _auth, async (req, res) => {
+  let query_response = {};
+
+  const page = req.query.page;
+  const user_id = res.locals.user_id;
+  const followers = await _query(
+    `SELECT target_user FROM User_User WHERE request_user='${user_id}' AND accepted=1`
+  );
+
+  if (!followers.length) {
+    res.status(400);
+    query_response.message = `You don't have any follower.`;
+  } else {
+    try {
+      const start = page == 1 ? 0 : (page - 1) * 10 - 1;
+      query_response.data = await _query(
+        `SELECT * FROM Post WHERE writer IN (SELECT target_user FROM User_User WHERE request_user='${user_id}' AND accepted=1) ORDER BY id LIMIT ${start}, 10`
+      );
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
+  }
+
+  res.send(query_response);
+});
+
 // User's posts get API
 router.get('/posts/:user_id', _auth, async (req, res) => {
   let query_response = {};
