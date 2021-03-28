@@ -2,25 +2,30 @@ const express = require('express');
 const router = express.Router();
 
 const _query = require('../../database/db');
-const _auth = require('../../utils/middleware');
+const middleware = require('../../utils/middleware');
 const utils = require('../../utils/utils');
 
-router.use((req, res, next) => {
-  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
-  next();
-});
-
 // Post upload API
-router.post('/posts', _auth, async (req, res) => {
+router.post('/posts', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const writer = res.locals.user_id;
   const content = req.body.content;
+  const image_url = req.body.image;
 
   try {
-    await _query(
+    let post = await _query(
       `INSERT INTO Post (content, writer) VALUES ('${content}', '${writer}');`
     );
+    let file = await _query(
+      `SELECT id FROM File WHERE url='${image_url.join("' OR url='")}';`
+    );
+
+    for (i = 0; i < file.length; i++) {
+      await _query(
+        `INSERT INTO File_Post(post_id, file_id) VALUES ('${post.insertId}', '${file[i].id}')`
+      );
+    }
     query_response.data = req.body;
   } catch (error) {
     res.status(400);
@@ -31,7 +36,7 @@ router.post('/posts', _auth, async (req, res) => {
 });
 
 // Followers' posts get API
-router.get('/feed', _auth, async (req, res) => {
+router.get('/feed', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const page = req.query.page;
@@ -59,11 +64,32 @@ router.get('/feed', _auth, async (req, res) => {
 });
 
 // User's posts get API
-router.get('/posts/:user_id', _auth, async (req, res) => {
+router.get('/posts/:user_id', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
+
+  if (request_user === target_user) {
+    let post_data = await _query(
+      `SELECT * FROM Post WHERE writer='${target_user}'`
+    );
+
+    for (i = 0; i < post_data.length; i++) {
+      let image_data = await _query(
+        `SELECT url FROM File JOIN File_Post ON File.id=File_Post.file_id WHERE post_id='${post_data[i].id}'`
+      );
+
+      let image_url = [];
+      for (j = 0; j < image_data.length; j++) {
+        image_url.push(image_data[j].url);
+      }
+      post_data[i].image = image_url;
+    }
+    query_response.data = post_data;
+    return res.send(query_response);
+  }
+
   const is_exist = await _query(
     `SELECT user_id FROM User WHERE user_id='${target_user}'`
   );
@@ -79,13 +105,29 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
     query_response.message = `User with id '${req.params.user_id}' does not exists`;
   } else {
     try {
-      if (is_private[0].is_private && !accepted[0].accepted) {
+      if (is_private[0].is_private && accepted.length == 0) {
+        res.status(400);
+        query_response.message = `This account is private.`;
+      } else if (is_private[0].is_private && !accepted[0].accepted) {
         res.status(400);
         query_response.message = `This account is private.`;
       } else {
-        query_response.data = await _query(
+        let post_data = await _query(
           `SELECT * FROM Post WHERE writer='${target_user}'`
         );
+
+        for (i = 0; i < post_data.length; i++) {
+          let image_data = await _query(
+            `SELECT url FROM File JOIN File_Post ON File.id=File_Post.file_id WHERE post_id='${post_data[i].id}'`
+          );
+
+          let image_url = [];
+          for (j = 0; j < image_data.length; j++) {
+            image_url.push(image_data[j].url);
+          }
+          post_data[i].image = image_url;
+        }
+        query_response.data = post_data;
       }
     } catch (error) {
       res.status(400);
@@ -97,7 +139,7 @@ router.get('/posts/:user_id', _auth, async (req, res) => {
 });
 
 // Post's content update API
-router.put('/posts/:post_id', _auth, async (req, res) => {
+router.put('/posts/:post_id', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -129,7 +171,7 @@ router.put('/posts/:post_id', _auth, async (req, res) => {
 });
 
 // Post delete API
-router.delete('/posts/:post_id', _auth, async (req, res) => {
+router.delete('/posts/:post_id', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -157,42 +199,46 @@ router.delete('/posts/:post_id', _auth, async (req, res) => {
 });
 
 // Post's comment accessibility update API
-router.put('/posts/:post_id/disable_cmt', _auth, async (req, res) => {
-  let query_response = {};
+router.put(
+  '/posts/:post_id/disable_cmt',
+  middleware._auth,
+  async (req, res) => {
+    let query_response = {};
 
-  const user_id = res.locals.user_id;
-  const post_id = req.params.post_id;
-  const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
+    const user_id = res.locals.user_id;
+    const post_id = req.params.post_id;
+    const writer = await _query(`SELECT writer FROM Post WHERE id=${post_id}`);
 
-  if (!writer.length) {
-    res.status(400);
-    query_response.message = `Post with id ${post_id} does not exists.`;
-  } else {
-    try {
-      if (user_id === writer[0].writer) {
-        const prev = await _query(
-          `SELECT comment_disabled FROM Post WHERE id=${post_id}`
-        );
-        await _query(
-          `UPDATE Post SET comment_disabled=${
-            (prev[0].comment_disabled + 1) % 2
-          } WHERE id=${post_id}`
-        );
-        query_response.message = `Accessibility of comments has been successfully updated.`;
-      } else {
-        query_response.message = `Post with id ${post_id} is not your post.`;
-      }
-    } catch (error) {
+    if (!writer.length) {
       res.status(400);
-      query_response.message = error;
+      query_response.message = `Post with id ${post_id} does not exists.`;
+    } else {
+      try {
+        if (user_id === writer[0].writer) {
+          const prev = await _query(
+            `SELECT comment_disabled FROM Post WHERE id=${post_id}`
+          );
+          await _query(
+            `UPDATE Post SET comment_disabled=${
+              (prev[0].comment_disabled + 1) % 2
+            } WHERE id=${post_id}`
+          );
+          query_response.message = `Accessibility of comments has been successfully updated.`;
+        } else {
+          query_response.message = `Post with id ${post_id} is not your post.`;
+        }
+      } catch (error) {
+        res.status(400);
+        query_response.message = error;
+      }
     }
-  }
 
-  res.send(query_response);
-});
+    res.send(query_response);
+  }
+);
 
 // Post archive/unarchive API
-router.put('/posts/:post_id/archive', _auth, async (req, res) => {
+router.put('/posts/:post_id/archive', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -227,7 +273,7 @@ router.put('/posts/:post_id/archive', _auth, async (req, res) => {
 });
 
 // Post like/unlike API
-router.post('/posts/:post_id/like', _auth, async (req, res) => {
+router.post('/posts/:post_id/like', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const user_id = res.locals.user_id;
