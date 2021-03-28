@@ -24,20 +24,28 @@ router.put("/users/:user_id/follow", middleware._auth, async (req, res) => {
       res.status(400);
       query_response.message = `User with user_id ${req.params.user_id} does not exists`;
     } else {
-      let target_user = query[0];
+      let target_user = query[0].user_id;
       try {
         let follow_req = await _query(
-          `SELECT * FROM User_User WHERE target_user='${target_user.user_id}' AND request_user='${res.locals.user_id}'`
+          `SELECT * FROM User_User WHERE target_user='${target_user}' AND request_user='${res.locals.user_id}'`
         );
+
         if (follow_req.length === 0) {
-          await _query(
-            `INSERT INTO User_User (target_user, request_user) VALUES ('${target_user.user_id}', '${res.locals.user_id}')`
-          );
-          query_response.message = `Follow request has been sent to ${target_user.user_id}`;
+          if (query[0].is_private === 0) {
+            await _query(
+              `INSERT INTO User_User (target_user, request_user, accepted) VALUES ('${target_user}', '${res.locals.user_id}', 1)`
+            );
+            query_response.message = `You are following ${target_user.user_id}`;
+          } else {
+            await _query(
+              `INSERT INTO User_User (target_user, request_user) VALUES ('${target_user}', '${res.locals.user_id}')`
+            );
+            query_response.message = `Follow request has been sent to ${target_user}`;
+          }
         } else if (follow_req[0].accepted === 0) {
-          query_response.message = `You have already requested to follow ${target_user.user_id}`;
+          query_response.message = `You have already requested to follow ${target_user}`;
         } else {
-          query_response.message = `You are already following ${target_user.user_id}`;
+          query_response.message = `You are already following ${target_user}`;
         }
       } catch (error) {
         res.status(400);
