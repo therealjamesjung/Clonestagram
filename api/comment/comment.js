@@ -5,6 +5,7 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
+// Get comments API
 router.get("/comments/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -52,6 +53,7 @@ router.get("/comments/:post_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Write a comment API
 router.post("/comments/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -81,6 +83,7 @@ router.post("/comments/:post_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Reply to a specific comment API
 router.post(
   "/comments/:comment_id/reply",
   middleware._auth,
@@ -123,6 +126,7 @@ router.post(
   }
 );
 
+// Delete a comment API
 router.delete("/comments/:comment_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -161,6 +165,7 @@ router.delete("/comments/:comment_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Like a comment API
 router.post(
   "/comments/:comment_id/like",
   middleware._auth,
@@ -206,6 +211,7 @@ router.post(
   }
 );
 
+// Get list of users who liked a specific comment API
 router.get("/comments/:comment_id/like", middleware._auth, async (req, res) => {
   let query_response = {};
 
