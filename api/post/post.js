@@ -30,7 +30,7 @@ router.post('/posts', _auth, async (req, res) => {
   res.send(query_response);
 });
 
-// Follower's posts get API
+// Followers' posts get API
 router.get('/feed', _auth, async (req, res) => {
   let query_response = {};
 
@@ -45,9 +45,9 @@ router.get('/feed', _auth, async (req, res) => {
     query_response.message = `You don't have any follower.`;
   } else {
     try {
-      const start = page == 1 ? 0 : (page - 1) * 10 - 1;
+      const start = (page - 1) * 10;
       query_response.data = await _query(
-        `SELECT * FROM Post WHERE writer IN (SELECT target_user FROM User_User WHERE request_user='${user_id}' AND accepted=1) ORDER BY id LIMIT ${start}, 10`
+        `SELECT * FROM Post WHERE writer IN (SELECT target_user FROM User_User WHERE request_user='${user_id}' AND accepted=1) ORDER BY id DESC LIMIT ${start}, 10`
       );
     } catch (error) {
       res.status(400);
