@@ -5,7 +5,14 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
+router.use((req, res, next) => {
+  console.log(`${req.method}  ${req.ip} requested on ${req.path}`);
+  next();
+});
+
+// Post upload API
 router.post("/posts", middleware._auth, async (req, res) => {
+
   let query_response = {};
 
   const writer = res.locals.user_id;
@@ -34,6 +41,35 @@ router.post("/posts", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Followers' posts get API
+router.get('/feed', _auth, async (req, res) => {
+  let query_response = {};
+
+  const page = req.query.page;
+  const user_id = res.locals.user_id;
+  const followers = await _query(
+    `SELECT target_user FROM User_User WHERE request_user='${user_id}' AND accepted=1`
+  );
+
+  if (!followers.length) {
+    res.status(400);
+    query_response.message = `You don't have any follower.`;
+  } else {
+    try {
+      const start = (page - 1) * 10;
+      query_response.data = await _query(
+        `SELECT * FROM Post WHERE writer IN (SELECT target_user FROM User_User WHERE request_user='${user_id}' AND accepted=1) ORDER BY id DESC LIMIT ${start}, 10`
+      );
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
+  }
+
+  res.send(query_response);
+});
+
+// User's posts get API
 router.get("/posts/:user_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -108,7 +144,9 @@ router.get("/posts/:user_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post's content update API
 router.put("/posts/:post_id", middleware._auth, async (req, res) => {
+
   let query_response = {};
 
   const user_id = res.locals.user_id;
@@ -139,6 +177,7 @@ router.put("/posts/:post_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post delete API
 router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -166,11 +205,14 @@ router.delete("/posts/:post_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+
+// Post's comment accessibility update API
 router.put(
   "/posts/:post_id/disable_cmt",
   middleware._auth,
   async (req, res) => {
     let query_response = {};
+
 
     const user_id = res.locals.user_id;
     const post_id = req.params.post_id;
@@ -204,6 +246,7 @@ router.put(
   }
 );
 
+// Post archive/unarchive API
 router.put("/posts/:post_id/archive", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -238,6 +281,7 @@ router.put("/posts/:post_id/archive", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Post like/unlike API
 router.post("/posts/:post_id/like", middleware._auth, async (req, res) => {
   let query_response = {};
 
