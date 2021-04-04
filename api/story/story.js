@@ -123,7 +123,7 @@ router.get("/stories", middleware._auth, async (req, res) => {
     my_story = await _query(
       `SELECT writer FROM Story WHERE writer = '${res.locals.user_id}' AND created_at > DATE_ADD(now(), INTERVAL -24 HOUR);`
     );
-    if (my_story) {
+    if (my_story.length) {
       query_response.data.unshift(my_story[0]);
     }
   } catch (error) {
