@@ -13,6 +13,7 @@ const post = require("./api/post/post");
 const comment = require("./api/comment/comment");
 const file = require("./api/file/file");
 const story = require("./api/story/story");
+const search = require("./api/search/search");
 const middleware = require("./utils/middleware");
 
 app.use(cors());
@@ -26,6 +27,7 @@ app.use(API_ROOT, post);
 app.use(API_ROOT, comment);
 app.use(API_ROOT, file);
 app.use(API_ROOT, story);
+app.use(API_ROOT, search);
 
 app.use(API_ROOT + "uploads", express.static(__dirname + `/uploads`));
 

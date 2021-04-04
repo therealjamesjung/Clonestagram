@@ -111,4 +111,26 @@ router.delete("/stories/:story_id", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Get list of users who have posted stories
+router.get("/stories", middleware._auth, async (req, res) => {
+  let query_response = {};
+
+  try {
+    query_response.data = await _query(
+      `SELECT DISTINCT writer FROM Story JOIN User_User ON Story.writer = User_User.target_user AND request_user = '${res.locals.user_id}'
+        WHERE Story.created_at > DATE_ADD(now(), INTERVAL -24 HOUR);`
+    );
+    my_story = await _query(
+      `SELECT writer FROM Story WHERE writer = '${res.locals.user_id}' AND created_at > DATE_ADD(now(), INTERVAL -24 HOUR);`
+    );
+    if (my_story) {
+      query_response.data.unshift(my_story[0]);
+    }
+  } catch (error) {
+    res.status(400);
+    query_response.data = error;
+  }
+  res.send(query_response);
+});
+
 module.exports = router;
