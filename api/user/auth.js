@@ -207,4 +207,25 @@ router.put(
   }
 );
 
+// Delete profile image API
+router.delete('/users/image', middleware._auth, async (req, res) => {
+  let query_response = {};
+  const request_user = res.locals.user_id;
+
+  try {
+    await _query(
+      `UPDATE User set profile_image='https://instagram.fdel3-1.fna.fbcdn.net/v/t51.2885-19/44884218_345707102882519_2446069589734326272_n.jpg?_nc_ht=instagram.fdel3-1.fna.fbcdn.net&_nc_ohc=NyXVWUpcBzMAX9SGJRm&edm=ANmP7GQAAAAA&ccb=7-4&oh=540c619fc854da05f400a2750451847d&oe=608E2CCF&_nc_sid=276363&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.2-ccb7-4' WHERE user_id='${request_user}'`
+    );
+    query_response.data = await _query(
+      `SELECT user_id, profile_image FROM User WHERE user_id='${request_user}'`
+    );
+    query_response.message = `You have sucessfully deleted your profile image.`;
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
 module.exports = router;
