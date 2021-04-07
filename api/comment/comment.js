@@ -70,7 +70,7 @@ router.get(
 
     try {
       let comments = await _query(
-        `SELECT * FROM Comment WHERE parent_comment = ${parent_comment_id} ORDER BY likes desc LIMIT ${
+        `SELECT * FROM Comment WHERE parent_comment = ${parent_comment_id} LIMIT ${
           page * limit
         }, ${limit};`
       );
