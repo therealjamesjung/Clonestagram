@@ -5,7 +5,7 @@ const _query = require("../../database/db");
 const middleware = require("../../utils/middleware");
 const utils = require("../../utils/utils");
 
-// Get comments API
+// Get parent comments API
 router.get("/comments/:post_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
@@ -22,7 +22,7 @@ router.get("/comments/:post_id", middleware._auth, async (req, res) => {
 
   try {
     let comments = await _query(
-      `SELECT * FROM Comment WHERE post = ${post_id} ORDER BY likes desc LIMIT ${
+      `SELECT * FROM Comment WHERE post = ${post_id} AND parent_comment is null ORDER BY likes desc LIMIT ${
         page * limit
       }, ${limit};`
     );
@@ -40,18 +40,62 @@ router.get("/comments/:post_id", middleware._auth, async (req, res) => {
       res.status(400);
       query_response.message = "No more comments";
     }
-    query_response.data = utils._convertToTree(
-      comments,
-      "id",
-      "parent_comment",
-      "child_comments"
-    );
+    query_response.data = comments;
   } catch (error) {
     res.status(400);
     query_response.data = error;
   }
   res.send(query_response);
 });
+
+// Get child comments API
+router.get(
+  "/comments/:parent_comment_id/reply",
+  middleware._auth,
+  async (req, res) => {
+    let query_response = {};
+
+    const page = req.query.page - 1;
+    const limit = 10;
+    const user = res.locals.user_id;
+    const parent_comment_id = req.params.parent_comment_id;
+    const comment = await _query(
+      `SELECT * FROM Comment WHERE id = ${parent_comment_id};`
+    );
+
+    if (comment.length == 0) {
+      query_response.message = `Comment #${parent_comment_id} does not exist.`;
+      return res.send(query_response);
+    }
+
+    try {
+      let comments = await _query(
+        `SELECT * FROM Comment WHERE parent_comment = ${parent_comment_id} ORDER BY likes desc LIMIT ${
+          page * limit
+        }, ${limit};`
+      );
+      for (let i = 0; i < comments.length; i++) {
+        let result = await _query(
+          `SELECT * From Comment_User WHERE comment_id = ${comments[i].id} AND user_id = '${user}';`
+        );
+        if (result.length == 0) {
+          comments[i].is_liked = false;
+        } else {
+          comments[i].is_liked = true;
+        }
+      }
+      if (comments.length == 0) {
+        res.status(400);
+        query_response.message = "No more comments";
+      }
+      query_response.data = comments;
+    } catch (error) {
+      res.status(400);
+      query_response.data = error;
+    }
+    res.send(query_response);
+  }
+);
 
 // Write a comment API
 router.post("/comments/:post_id", middleware._auth, async (req, res) => {
