@@ -351,4 +351,30 @@ router.get('/posts/:post_id/likes', middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Users who liked the post get API
+router.get('/posts/:post_id/like', middleware._auth, async (req, res) => {
+  let query_response = {};
+
+  const page = req.query.page;
+  const post_id = req.params.post_id;
+  const is_exist = await _query(`SELECT * FROM Post WHERE id=${post_id}`);
+
+  if (!is_exist.length) {
+    res.status(400);
+    query_response.message = `Post with id ${post_id} does not exists.`;
+  } else {
+    try {
+      const start = (page - 1) * 10;
+      query_response.data = await _query(
+        `SELECT user_id, name, profile_image FROM User WHERE user_id IN (SELECT user_id FROM Post_User WHERE post_id=${post_id}) LIMIT ${start}, 10`
+      );
+    } catch (error) {
+      res.status(400);
+      query_response.message = error;
+    }
+  }
+
+  res.send(query_response);
+});
+
 module.exports = router;
