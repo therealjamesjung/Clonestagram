@@ -330,7 +330,7 @@ router.post('/posts/:post_id/like', middleware._auth, async (req, res) => {
 });
 
 // Post's likes get API
-router.get('/posts/:post_id/like', middleware._auth, async (req, res) => {
+router.get('/posts/:post_id/likes', middleware._auth, async (req, res) => {
   let query_response = {};
 
   const post_id = req.params.post_id;
