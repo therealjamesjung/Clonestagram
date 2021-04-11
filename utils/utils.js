@@ -49,37 +49,6 @@ const _update = (table, id, body) => {
   return (query = `UPDATE ${table} SET ${data} WHERE id=${id};`);
 };
 
-const _convertToTree = (
-  array,
-  idFieldName,
-  parentIdFieldName,
-  childrenFieldName
-) => {
-  let cloned = array.slice();
-
-  for (let i = cloned.length - 1; i >= 0; i--) {
-    let parentId = cloned[i][parentIdFieldName];
-
-    if (parentId) {
-      let filtered = array.filter((elem) => {
-        return elem[idFieldName].toString() == parentId.toString();
-      });
-
-      if (filtered.length) {
-        let parent = filtered[0];
-
-        if (parent[childrenFieldName]) {
-          parent[childrenFieldName].unshift(cloned[i]);
-        } else {
-          parent[childrenFieldName] = [cloned[i]];
-        }
-      }
-      cloned.splice(i, 1);
-    }
-  }
-  return cloned;
-};
-
 module.exports = {
   _validate_email,
   _validate_body,
@@ -88,5 +57,4 @@ module.exports = {
   _delete,
   _select,
   _update,
-  _convertToTree,
 };
