@@ -1,18 +1,18 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const router = express.Router();
 
-const _query = require('../../database/db');
-const middleware = require('../../utils/middleware');
-const utils = require('../../utils/utils');
+const _query = require("../../database/db");
+const middleware = require("../../utils/middleware");
+const utils = require("../../utils/utils");
 
 // Follow request API
-router.put('/users/:user_id/follow', middleware._auth, async (req, res) => {
+router.put("/users/:user_id/follow", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
-    query_response.message = 'You can not follow yourself';
+    query_response.message = "You can not follow yourself";
     return res.send(query_response);
   }
 
@@ -61,11 +61,11 @@ router.put('/users/:user_id/follow', middleware._auth, async (req, res) => {
 });
 
 // Unfollow request API
-router.put('/users/:user_id/unfollow', middleware._auth, async (req, res) => {
+router.put("/users/:user_id/unfollow", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
-    query_response.message = 'You can not unfollow yourself';
+    query_response.message = "You can not unfollow yourself";
     return res.send(query_response);
   }
 
@@ -111,7 +111,7 @@ router.put('/users/:user_id/unfollow', middleware._auth, async (req, res) => {
 });
 
 // Accept follow request API
-router.put('/users/:user_id/accept', middleware._auth, async (req, res) => {
+router.put("/users/:user_id/accept", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
@@ -155,8 +155,8 @@ router.put('/users/:user_id/accept', middleware._auth, async (req, res) => {
 });
 
 // Update account privacy API
-router.put('/users/private', middleware._auth, async (req, res) => {
-  let query_response = { message: 'Account privacy has been updated.' };
+router.put("/users/private", middleware._auth, async (req, res) => {
+  let query_response = { message: "Account privacy has been updated." };
   const request_user = res.locals.user_id;
 
   const is_private = await _query(
@@ -178,7 +178,7 @@ router.put('/users/private', middleware._auth, async (req, res) => {
 });
 
 // Get list of user's followers API
-router.get('/users/:user_id/followers', middleware._auth, async (req, res) => {
+router.get("/users/:user_id/followers", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
@@ -226,7 +226,7 @@ router.get('/users/:user_id/followers', middleware._auth, async (req, res) => {
 });
 
 // Get list of user's followees API
-router.get('/users/:user_id/followees', middleware._auth, async (req, res) => {
+router.get("/users/:user_id/followees", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
@@ -274,7 +274,7 @@ router.get('/users/:user_id/followees', middleware._auth, async (req, res) => {
 });
 
 // Get list of follow requests API
-router.get('/users/requests', middleware._auth, async (req, res) => {
+router.get("/users/requests", middleware._auth, async (req, res) => {
   let query_response = {};
   const request_user = res.locals.user_id;
 
@@ -291,17 +291,32 @@ router.get('/users/requests', middleware._auth, async (req, res) => {
 });
 
 // Get user's profile API
-router.get('/users/:user_id', middleware._auth, async (req, res) => {
+router.get("/users/:user_id", middleware._auth, async (req, res) => {
   let query_response = {};
 
   const request_user = res.locals.user_id;
   const target_user = req.params.user_id;
 
   if (request_user === target_user) {
-    query_response.data = await _query(
-      `SELECT user_id, email, name, bio, profile_image, is_private FROM User WHERE user_id='${target_user}'`
-    );
-    return res.send(query_response);
+    try {
+      query_response.data = await _query(
+        `SELECT user_id, email, name, bio, profile_image, is_private FROM User WHERE user_id='${target_user}'`
+      );
+
+      followers = await _query(
+        `SELECT COUNT(*) AS count FROM User_User WHERE target_user='${target_user}' AND accepted=1`
+      );
+      followees = await _query(
+        `SELECT COUNT(*) AS count FROM User_User WHERE request_user='${target_user}' AND accepted=1`
+      );
+
+      query_response.data[0].followers_count = followers[0].count;
+      query_response.data[0].followees_count = followees[0].count;
+
+      return res.send(query_response);
+    } catch (error) {
+      return res.send(error);
+    }
   }
 
   const is_private = await _query(
@@ -332,6 +347,16 @@ router.get('/users/:user_id', middleware._auth, async (req, res) => {
         `SELECT user_id, email, name, bio, profile_image, is_private FROM User WHERE user_id='${target_user}'`
       );
     }
+
+    followers = await _query(
+      `SELECT COUNT(*) AS count FROM User_User WHERE target_user='${target_user}' AND accepted=1`
+    );
+    followees = await _query(
+      `SELECT COUNT(*) AS count FROM User_User WHERE request_user='${target_user}' AND accepted=1`
+    );
+
+    query_response.data[0].followers_count = followers[0].count;
+    query_response.data[0].followees_count = followees[0].count;
   } catch (error) {
     res.status(400);
     query_response.message = error;
@@ -341,11 +366,11 @@ router.get('/users/:user_id', middleware._auth, async (req, res) => {
 });
 
 // Delete a follower
-router.delete('/users/:user_id/delete', middleware._auth, async (req, res) => {
+router.delete("/users/:user_id/delete", middleware._auth, async (req, res) => {
   let query_response = {};
 
   if (req.params.user_id == res.locals.user_id) {
-    query_response.message = 'You can not delete yourself';
+    query_response.message = "You can not delete yourself";
     return res.send(query_response);
   }
 
