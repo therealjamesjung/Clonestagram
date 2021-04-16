@@ -329,7 +329,7 @@ router.get('/users/:user_id', middleware._auth, async (req, res) => {
       );
     } else {
       query_response.data = await _query(
-        `SELECT user_id, email, name, bio, is_private FROM User WHERE user_id='${target_user}'`
+        `SELECT user_id, email, name, bio, profile_image, is_private FROM User WHERE user_id='${target_user}'`
       );
     }
   } catch (error) {
