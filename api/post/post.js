@@ -377,4 +377,38 @@ router.get("/posts/:post_id/like", middleware._auth, async (req, res) => {
   res.send(query_response);
 });
 
+// Get posts randomly
+router.get("/posts", middleware._auth, async (req, res) => {
+  let query_response = {};
+
+  const page = req.query.page - 1;
+  const limit = 9;
+
+  try {
+    let post_data = await _query(
+      `SELECT * FROM Post WHERE writer IN (SELECT user_id FROM User WHERE is_private = 0) ORDER BY rand() LIMIT ${
+        page * limit
+      }, ${limit};`
+    );
+    for (i = 0; i < post_data.length; i++) {
+      let image_data = await _query(
+        `SELECT url FROM File JOIN File_Post ON File.id=File_Post.file_id WHERE post_id='${post_data[i].id}'`
+      );
+
+      let image_url = [];
+      for (j = 0; j < image_data.length; j++) {
+        image_url.push(image_data[j].url);
+      }
+      post_data[i].image = image_url;
+      query_response = post_data;
+    }
+    query_response.data = post_data;
+  } catch (error) {
+    res.status(400);
+    query_response.message = error;
+  }
+
+  res.send(query_response);
+});
+
 module.exports = router;
